@@ -17,9 +17,26 @@ const { height, width } = Dimensions.get('window');
 export default function LoginScreen({ setIsLoggedIn, setUsername }) {
   const [localUsername, setLocalUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [isNewUser, setIsNewUser] = useState(false);
+
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [age, setAge] = useState('');
 
   const handleLogin = () => {
     if (localUsername.trim() !== '' && password !== '') {
+      if (isNewUser) {
+        console.log("Creating new user:");
+        console.log("Username:", localUsername);
+        console.log("Password:", password);
+        console.log("Email:", email);
+        console.log("Name:", name);
+        console.log("Age:", age);
+        // TODO: Save to AsyncStorage or backend later
+      } else {
+        console.log("Logging in existing user:", localUsername);
+        // TODO: Validate login credentials
+      }
       setUsername(localUsername);
       setIsLoggedIn(true);
     }
@@ -41,7 +58,35 @@ export default function LoginScreen({ setIsLoggedIn, setUsername }) {
           style={styles.logo}
         />
         <View style={styles.container}>
-          <Text style={styles.header}>🌲 Welcome Back, Forest Guardian!</Text>
+          <Text style={styles.header}>
+            {isNewUser ? '🌱 Let’s Get Started!' : '🌲 Welcome Back, Forest Guardian!'}
+          </Text>
+
+          {isNewUser && (
+            <>
+              <TextInput
+                style={styles.input}
+                placeholder="Name"
+                value={name}
+                onChangeText={setName}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Email"
+                keyboardType="email-address"
+                value={email}
+                onChangeText={setEmail}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Age"
+                keyboardType="numeric"
+                value={age}
+                onChangeText={setAge}
+              />
+            </>
+          )}
+
           <TextInput
             style={styles.input}
             placeholder="Username"
@@ -55,7 +100,18 @@ export default function LoginScreen({ setIsLoggedIn, setUsername }) {
             value={password}
             onChangeText={setPassword}
           />
-          <Button title="🌿 Start Growing" onPress={handleLogin} />
+
+          <Button
+            title={isNewUser ? "🌿 Create Account" : "🌿 Start Growing"}
+            onPress={handleLogin}
+          />
+
+          <Text
+            style={styles.toggleText}
+            onPress={() => setIsNewUser(prev => !prev)}
+          >
+            {isNewUser ? "Already have an account? Login here." : "New here? Create an account"}
+          </Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -107,5 +163,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     backgroundColor: '#ffffffee',
     width: '100%',
+  },
+  toggleText: {
+    color: '#2e7d32',
+    marginVertical: 12,
+    textDecorationLine: 'underline',
+    textAlign: 'center',
+    fontSize: 14,
   },
 });

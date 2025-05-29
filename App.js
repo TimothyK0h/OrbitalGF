@@ -5,6 +5,7 @@ import LoginScreen from './components/LoginScreen';
 import HomeTabs from './components/HomeTabs'; // Swipeable tabs (forest)
 import TaskScreen from './components/TaskScreen';
 import SettingsScreen from './components/SettingsScreen';
+import PlantScreen from './components/PlantScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -25,6 +26,9 @@ export default function App() {
             {() => <TaskScreen onScoreChange={setScore} />}
           </Tab.Screen>
           <Tab.Screen name="Settings" component={SettingsScreen} />
+          <Tab.Screen name="Plant">
+            {() => <PlantScreen progress={score} />}
+          </Tab.Screen>
         </Tab.Navigator>
       ) : (
         <LoginScreen setIsLoggedIn={setIsLoggedIn} setUsername={setUsername} />

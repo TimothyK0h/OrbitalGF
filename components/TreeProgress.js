@@ -38,12 +38,7 @@ const TreeProgress = ({ score }) => {
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 },
   text: { fontSize: 22, fontWeight: 'bold', color: '#2e7d32' },
-  tree: {tree: {
-  width: '100%',
-  height: 250, // or adjust based on screen size
-  marginVertical: 20,
-},
- },
+  tree: { width: 300, height: 300, marginVertical: 20 },
   progressText: { fontSize: 18, marginBottom: 20 },
   leaderboardTitle: { fontSize: 20, fontWeight: 'bold', marginTop: 30, marginBottom: 10 },
 });
