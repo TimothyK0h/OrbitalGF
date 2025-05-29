@@ -1,38 +1,57 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import CheckBox from '@react-native-community/checkbox';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
-export default function TaskScreen() {
-  const [tasks, setTasks] = useState([
-    { id: 1, title: 'Water your plant', done: false },
-    { id: 2, title: 'Do 10 pushups', done: false },
-    { id: 3, title: 'Recycle something', done: true },
-  ]);
+const initialTasks = [
+  { id: '1', text: 'Recycle plastic bottles', points: 10, done: false },
+  { id: '2', text: 'Use reusable shopping bag', points: 15, done: false },
+  { id: '3', text: 'Take public transport', points: 20, done: false },
+  { id: '4', text: 'Plant a tree', points: 50, done: false },
+];
+
+export default function TaskScreen({ onScoreChange }) {
+  const [tasks, setTasks] = useState(initialTasks);
 
   const toggleTask = (id) => {
-    const updated = tasks.map((task) =>
+    const updatedTasks = tasks.map(task =>
       task.id === id ? { ...task, done: !task.done } : task
     );
-    setTasks(updated);
+    setTasks(updatedTasks);
+
+    const total = updatedTasks.reduce((sum, t) => sum + (t.done ? t.points : 0), 0);
+    if (onScoreChange) onScoreChange(total);
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>📝 Daily Tasks</Text>
-      {tasks.map((task) => (
-        <View key={task.id} style={styles.taskItem}>
-          <CheckBox value={task.done} onValueChange={() => toggleTask(task.id)} />
-          <Text style={task.done ? styles.taskDone : styles.taskText}>{task.title}</Text>
-        </View>
-      ))}
+      <Text style={styles.title}>Eco-Friendly Tasks</Text>
+      <FlatList
+        data={tasks}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.task}
+            onPress={() => toggleTask(item.id)}
+          >
+            <Ionicons
+              name={item.done ? 'checkbox' : 'square-outline'}
+              size={24}
+              color="green"
+              style={{ marginRight: 10 }}
+            />
+            <Text style={[styles.text, item.done && { textDecorationLine: 'line-through' }]}>
+              {item.text} (+{item.points} pts)
+            </Text>
+          </TouchableOpacity>
+        )}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20 },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 20 },
-  taskItem: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-  taskText: { marginLeft: 10, fontSize: 16 },
-  taskDone: { marginLeft: 10, fontSize: 16, textDecorationLine: 'line-through', color: '#888' },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 10, color: '#2e7d32' },
+  task: { flexDirection: 'row', alignItems: 'center', marginVertical: 8 },
+  text: { fontSize: 16 },
 });
