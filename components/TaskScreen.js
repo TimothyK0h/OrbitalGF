@@ -1,17 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-const initialTasks = [
-  { id: '1', text: 'Recycle plastic bottles', points: 10, done: false },
-  { id: '2', text: 'Use reusable shopping bag', points: 15, done: false },
-  { id: '3', text: 'Take public transport', points: 20, done: false },
-  { id: '4', text: 'Plant a tree', points: 50, done: false },
-];
-
-export default function TaskScreen({ onScoreChange }) {
-  const [tasks, setTasks] = useState(initialTasks);
-
+export default function TaskScreen({ tasks, setTasks, onScoreChange }) {
   const toggleTask = (id) => {
     const updatedTasks = tasks.map(task =>
       task.id === id ? { ...task, done: !task.done } : task

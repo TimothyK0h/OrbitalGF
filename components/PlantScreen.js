@@ -55,7 +55,14 @@ const PlantScreen = ({ progress }) => {
         ))}
       </View>
 
-      <Image source={displayedMap} style={styles.sgMap} resizeMode="contain" />
+      <Image
+        source={displayedMap}
+        style={[
+            styles.sgMap,
+            (selectedRegion === 'Central' || selectedRegion === 'East') && { marginTop: 16 },
+        ]}
+        resizeMode="contain"
+        />
 
       {selectedRegion && (
         <View style={styles.selectedRegionContainer}>

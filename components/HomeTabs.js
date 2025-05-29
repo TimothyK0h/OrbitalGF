@@ -9,6 +9,7 @@ import {
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import TreeProgress from './TreeProgress';
 import PlantScreen from './PlantScreen';
+import BadgesScreen from './BadgesScreen';
 
 const Tab = createMaterialTopTabNavigator();
 const { width, height } = Dimensions.get('window');
@@ -37,7 +38,7 @@ function Tab3() {
   );
 }
 
-export default function HomeTabs({ score }) {
+export default function HomeTabs({ score, completedTasks }) {
   return (
     <ImageBackground
       source={require('../assets/forest-bg.jpg')}
@@ -60,7 +61,7 @@ export default function HomeTabs({ score }) {
           },
         }}
       >
-        <Tab.Screen name="Tasks" component={Tab1} />
+        <Tab.Screen name="Badges">{() => <BadgesScreen progress={score} tasksCompleted={completedTasks  } />}</Tab.Screen>
         <Tab.Screen name="Progress">{() => <Tab2 score={score} />}</Tab.Screen>
         <Tab.Screen name="Plant" component={PlantScreen} />
       </Tab.Navigator>
