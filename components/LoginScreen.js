@@ -15,16 +15,18 @@ import {
 const { height, width } = Dimensions.get('window');
 
 export default function LoginScreen({ setIsLoggedIn, setUsername }) {
+
   const [localUsername, setLocalUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isNewUser, setIsNewUser] = useState(false);
-
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
 
   const handleLogin = () => {
+
     if (localUsername.trim() !== '' && password !== '') {
+
       if (isNewUser) {
         console.log("Creating new user:");
         console.log("Username:", localUsername);
@@ -32,22 +34,30 @@ export default function LoginScreen({ setIsLoggedIn, setUsername }) {
         console.log("Email:", email);
         console.log("Name:", name);
         console.log("Age:", age);
-        // TODO: Save to AsyncStorage or backend later
+        // TODO: Save to AsyncStorage or backend later (Firebase)
       } else {
         console.log("Logging in existing user:", localUsername);
         // TODO: Validate login credentials
       }
+
       setUsername(localUsername);
+      //when setIsLoggedIn set to true, it updates state in App.js, triggering a re-render that switches
+      //the view from LoginScreen to bottom tab navigator (Forest Home, Tasks, etc.)
       setIsLoggedIn(true);
     }
   };
 
   return (
     <KeyboardAvoidingView
+      //shifts view box so that it will not be blocked by keyboard when keying in texts
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+
+      <ScrollView
+      //allows scrolling for texts that are too long up and down
+      contentContainerStyle={styles.scrollContainer}>
+
         <Image
           source={require('../assets/forest-gif.gif')}
           style={styles.fullGif}
@@ -63,6 +73,7 @@ export default function LoginScreen({ setIsLoggedIn, setUsername }) {
           </Text>
 
           {isNewUser && (
+            //extra info for new user to key in when isNewUser activates true
             <>
               <TextInput
                 style={styles.input}
