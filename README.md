@@ -90,13 +90,16 @@ Our goal is to empower people to take eco-conscious actions and turn digital imp
 ![new account](https://github.com/user-attachments/assets/efca018e-6f83-46b1-9bfd-7b48359575a7)
 
 ### home
-![home](https://github.com/user-attachments/assets/7c3c52de-34e4-4167-81b7-6fb1a21dcf5c)
+![Home](https://github.com/user-attachments/assets/9e4f6232-e973-4e7d-98e2-220325cdc914)
+
 
 ### account profile screen
-![account profile screen](https://github.com/user-attachments/assets/529fb677-7ce2-465f-96cd-0966a298949e)
+![my_profile_screen](https://github.com/user-attachments/assets/50565e1f-cd1a-48c1-9ed7-09c6825546fb)
+
 
 ### edit profile
-![edit_profiel](https://github.com/user-attachments/assets/ab671028-ba68-4128-ae75-9d4f8de3737e)
+![edit_profile] (https://github.com/user-attachments/assets/c9aa9e03-12e0-40a5-875e-95931aed49ef)
+
 
 ---
 ## Testing & Evaluation
