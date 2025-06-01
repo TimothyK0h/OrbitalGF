@@ -75,6 +75,28 @@ Our goal is to empower people to take eco-conscious actions and turn digital imp
 ---
 
 ## Figma MockUp
+### Initilisation screen
+![Loading screen](https://github.com/user-attachments/assets/c72b86e2-5bf8-4c7e-9754-8ca56872acf0)
+### intro 1 (for first time users)
+![intro_1](https://github.com/user-attachments/assets/8f4deaaf-69bb-48ed-92d2-425aacac1a6a)
+
+### intro 2
+![intro_2](https://github.com/user-attachments/assets/5bbb4be6-62af-44d0-a2ac-92e6dafa8b4e)
+
+### login
+![login](https://github.com/user-attachments/assets/1fa52926-a950-4525-b606-7467106d5df5)
+
+### new account
+![new account](https://github.com/user-attachments/assets/efca018e-6f83-46b1-9bfd-7b48359575a7)
+
+### home
+![home](https://github.com/user-attachments/assets/7c3c52de-34e4-4167-81b7-6fb1a21dcf5c)
+
+### account profile screen
+![account profile screen](https://github.com/user-attachments/assets/529fb677-7ce2-465f-96cd-0966a298949e)
+
+### edit profile
+![edit_profiel](https://github.com/user-attachments/assets/ab671028-ba68-4128-ae75-9d4f8de3737e)
 
 ---
 ## Testing & Evaluation
