@@ -98,7 +98,7 @@ Our goal is to empower people to take eco-conscious actions and turn digital imp
 
 
 ### edit profile
-![edit_profile] (https://github.com/user-attachments/assets/c9aa9e03-12e0-40a5-875e-95931aed49ef)
+![edit_profile](https://github.com/user-attachments/assets/c9aa9e03-12e0-40a5-875e-95931aed49ef)
 
 
 ---
