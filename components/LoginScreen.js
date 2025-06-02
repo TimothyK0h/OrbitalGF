@@ -1,49 +1,23 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  Button,
-  StyleSheet,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Dimensions,
-} from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Image, KeyboardAvoidingView, Platform, ScrollView, Dimensions } from 'react-native';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth'
 
 const { height, width } = Dimensions.get('window');
 
-export default function LoginScreen({ setIsLoggedIn, setUsername }) {
+export default function LoginScreen({ email, setEmail, password, setPassword, isLogin, setIsLogin }) {
+ 
+  const auth = getAuth();
 
-  const [localUsername, setLocalUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [isNewUser, setIsNewUser] = useState(false);
-  const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
-  const [age, setAge] = useState('');
-
-  const handleLogin = () => {
-
-    if (localUsername.trim() !== '' && password !== '') {
-
-      if (isNewUser) {
-        console.log("Creating new user:");
-        console.log("Username:", localUsername);
-        console.log("Password:", password);
-        console.log("Email:", email);
-        console.log("Name:", name);
-        console.log("Age:", age);
-        // TODO: Save to AsyncStorage or backend later (Firebase)
+  const handleFireBaseAuth = async () => {
+    try {
+      if (isLogin) {
+        await signInWithEmailAndPassword(auth, email, password);
+        console.log('Signed in');
       } else {
-        console.log("Logging in existing user:", localUsername);
-        // TODO: Validate login credentials
+        await createUserWithEmailAndPassword(auth, email, password);
       }
-
-      setUsername(localUsername);
-      //when setIsLoggedIn set to true, it updates state in App.js, triggering a re-render that switches
-      //the view from LoginScreen to bottom tab navigator (Forest Home, Tasks, etc.)
-      setIsLoggedIn(true);
+    } catch (error) {
+      console.error('Auth error:', error.message);
     }
   };
 
@@ -67,43 +41,22 @@ export default function LoginScreen({ setIsLoggedIn, setUsername }) {
           source={require('../assets/goon-foresters-icon.png')}
           style={styles.logo}
         />
+
         <View style={styles.container}>
+
           <Text style={styles.header}>
-            {isNewUser ? '🌱 Let’s Get Started!' : '🌲 Welcome Back, Forest Guardian!'}
+            {isLogin ? '🌱 Let’s Get Started!' : '🌲 Welcome Back, Forest Guardian!'}
           </Text>
 
-          {isNewUser && (
-            //extra info for new user to key in when isNewUser activates true
-            <>
-              <TextInput
-                style={styles.input}
-                placeholder="Name"
-                value={name}
-                onChangeText={setName}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Email"
-                keyboardType="email-address"
-                value={email}
-                onChangeText={setEmail}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Age"
-                keyboardType="numeric"
-                value={age}
-                onChangeText={setAge}
-              />
-            </>
-          )}
-
           <TextInput
-            style={styles.input}
-            placeholder="Username"
-            value={localUsername}
-            onChangeText={setLocalUsername}
+            style={style.input}
+            placeholder="Email"
+            keyboardType="email-address"
+            autoCapitalize='none'
+            value={email}
+            onChangeText={setEmail}
           />
+
           <TextInput
             style={styles.input}
             placeholder="Password"
@@ -113,15 +66,17 @@ export default function LoginScreen({ setIsLoggedIn, setUsername }) {
           />
 
           <Button
-            title={isNewUser ? "🌿 Create Account" : "🌿 Start Growing"}
-            onPress={handleLogin}
+            title={isLogin ? "🌿 Start Growing" : "🌿 Create Account"}
+            onPress={handleFireBaseAuth}
           />
 
           <Text
             style={styles.toggleText}
-            onPress={() => setIsNewUser(prev => !prev)}
+            onPress={() => setIsLogin(prev => !prev)}
           >
-            {isNewUser ? "Already have an account? Login here." : "New here? Create an account"}
+
+            {isLogin ?  "New here? Create an account" : "Already have an account? Login here."}
+
           </Text>
         </View>
       </ScrollView>
