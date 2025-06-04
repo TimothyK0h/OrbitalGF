@@ -11,6 +11,9 @@ import {
   ScrollView,
   Dimensions,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { login, signup } from '../api';
+import { Alert } from 'react-native'
 
 const { height, width } = Dimensions.get('window');
 
@@ -23,29 +26,56 @@ export default function LoginScreen({ setIsLoggedIn, setUsername }) {
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
+  if (!localUsername || !password) {
+    Alert.alert("Missing Fields", "Username and password are required.");
+    return;
+  }
 
-    if (localUsername.trim() !== '' && password !== '') {
+  try {
 
-      if (isNewUser) {
-        console.log("Creating new user:");
-        console.log("Username:", localUsername);
-        console.log("Password:", password);
-        console.log("Email:", email);
-        console.log("Name:", name);
-        console.log("Age:", age);
-        // TODO: Save to AsyncStorage or backend later (Firebase)
-      } else {
-        console.log("Logging in existing user:", localUsername);
-        // TODO: Validate login credentials
-      }
+    if (isNewUser) {
+      // Attempt signup
+      const res = await signup({ username: localUsername, password });
 
-      setUsername(localUsername);
-      //when setIsLoggedIn set to true, it updates state in App.js, triggering a re-render that switches
-      //the view from LoginScreen to bottom tab navigator (Forest Home, Tasks, etc.)
-      setIsLoggedIn(true);
+      Alert.alert("Success", "Account created successfully! Please log in.");
+      setIsNewUser(false);
+      return;
     }
-  };
+
+    // Attempt login
+    const res = await login({ username: localUsername, password });
+    const token = res.data.token;
+
+    await AsyncStorage.setItem('token', token);
+    setUsername(localUsername);
+    setIsLoggedIn(true);
+
+    Alert.alert("Welcome", `Logged in as ${localUsername}`);
+
+  } catch (err) {
+    const status = err.response?.status;
+    const message = err.response?.data?.error;
+
+    if (isNewUser) {
+      // Handle signup errors
+      if (status === 400 && message === 'Username already exists.') {
+        Alert.alert("Signup Failed", "That username is already taken. Try another.");
+      } else {
+        Alert.alert("Signup Error", message || "Could not create account.");
+      } 
+    } else {
+      // Handle login errors
+      if (status === 401 && message === 'User not found.') {
+        Alert.alert("Login Failed", "No account found with that username.");
+      } else if (status === 401 && message === 'Incorrect password.') {
+        Alert.alert("Login Failed", "Incorrect password. Please try again.");
+      } else {
+        Alert.alert("Login Error", message || "Something went wrong.");
+      }
+    }
+  }
+};
 
   return (
     <KeyboardAvoidingView
