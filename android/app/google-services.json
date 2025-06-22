@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "546324666380",
+    "project_id": "goonforestor-firebase",
+    "storage_bucket": "goonforestor-firebase.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:546324666380:android:7c81fd4cf8d307980df629",
+        "android_client_info": {
+          "package_name": "com.timothykoh.GoonForestor"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "546324666380-ilolvsbvv44vk8n98u3v0vdhiomkhdn3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.timothykoh.GoonForestor",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "546324666380-ikcoukp0rdcl78md8bir4ke99h1enjos.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAyrv6X62sEUioV2ScDVjKFG4gjS8Cp20c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "546324666380-ikcoukp0rdcl78md8bir4ke99h1enjos.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "546324666380-fem4g7kl6fvubksp5mej6mvgagvp8lp6.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.galaxies.firebase"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
