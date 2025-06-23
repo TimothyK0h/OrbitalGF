@@ -1,8 +1,8 @@
 // app/(auth)/settings.tsx
-import { View, Text, StyleSheet, Button } from 'react-native';
-import React from 'react';
 import auth from '@react-native-firebase/auth';
 import { useRouter } from 'expo-router';
+import React from 'react';
+import { Button, StyleSheet, Text, View } from 'react-native';
 
 export default function Settings() {
   const router = useRouter();

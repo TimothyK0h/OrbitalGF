@@ -30,7 +30,7 @@ export default function RootLayout() {
 
     if (user && !inAuthGroup) {
       console.log('➡️ redirecting to /home')
-      router.replace('/(auth)/home');
+      router.replace('/(auth)/(nav)/home');
     } else if (!user && !inAuthGroup && !onboardingRoutes.includes(currentRoute)) {
       console.log('➡️ redirecting to /')
       router.replace('/');

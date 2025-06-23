@@ -1,21 +1,20 @@
+import auth from '@react-native-firebase/auth';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  Image,
-  StyleSheet,
   ActivityIndicator,
+  Alert,
+  Image,
   ImageBackground,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import auth from '@react-native-firebase/auth';
-import { useRouter } from 'expo-router'
-import { useEffect } from 'react'
 
 export default function Index() {
   const router = useRouter();
@@ -28,7 +27,7 @@ export default function Index() {
     try {
       await auth().signInWithEmailAndPassword(email, password);
       Alert.alert('Login Successful');
-      router.navigate('/(auth)/home')
+      router.navigate('/(auth)/(nav)/home')
     } catch (e: any) {
       Alert.alert('Login Failed', e.message);
     } finally {
@@ -143,12 +142,11 @@ const styles = StyleSheet.create({
   backgroundColor: '#fff',
   borderTopLeftRadius: 20,
   borderTopRightRadius: 20,
-  // Optional: if you want it to float like a card
   shadowColor: '#000',
   shadowOffset: { width: 0, height: 2 },
   shadowOpacity: 0.1,
   shadowRadius: 5,
-  elevation: 5, // for Android shadow
+  elevation: 5, 
 },
   scroll: {
     paddingVertical: 40,
