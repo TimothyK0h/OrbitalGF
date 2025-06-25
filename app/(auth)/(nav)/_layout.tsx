@@ -61,7 +61,7 @@ export default function NavLayout() {
 const styles = StyleSheet.create({
   navbar: {
     position: "absolute",
-    bottom: 10,
+    bottom: 0,
     left: 0,
     right: 0,
     height: 100,

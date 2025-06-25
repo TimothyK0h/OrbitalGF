@@ -148,11 +148,12 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 20, fontWeight: '700', marginBottom: 16 },
   treeRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 30,
+    rowGap: 20,
   },
-  treeBox: { alignItems: 'center', width: 100, height: 100 },
-  treeColor: { width: 90, height: 90, borderRadius: 14 },
+  treeBox: { alignItems: 'center', width: "22%", height: 100 },
+  treeColor: { width: 80, height: 80, borderRadius: 14 },
   treeLabel: { marginTop: 8, fontSize: 14, fontWeight: '500' },
   divider: { height: 1, backgroundColor: '#ddd', marginVertical: 20 },
   featureRow: {
