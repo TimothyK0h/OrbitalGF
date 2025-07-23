@@ -1,33 +1,52 @@
+import auth from '@react-native-firebase/auth';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  View,
+  ImageBackground,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Image,
-  ImageBackground,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
+  View
 } from 'react-native';
-import auth from '@react-native-firebase/auth';
-import { useRouter } from 'expo-router';
-import { useEffect } from 'react'
+import DropDownPicker from 'react-native-dropdown-picker';
 
 export default function SignUp() {
   const router = useRouter();
 
-  const [name, setName] = useState('');
-  const [place, setPlace] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [name, setName] = useState('');
+    const [place, setPlace] = useState('');
+    const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [openPlace, setOpenPlace] = useState(false);
+    const [placeItems, setPlaceItems] = useState([
+      { label: 'Singapore', value: 'Singapore' },
+      { label: 'Malaysia', value: 'Malaysia' },
+      { label: 'Vietnam', value: 'Vietnam' },
+      { label: 'United States', value: 'USA' },
+      { label: 'United Kingdom', value: 'UK' },
+      { label: 'Japan', value: 'Japan' },
+    ]);
+    const [openPhone, setOpenPhone] = useState(false);
+    const [phoneCode, setPhoneCode] = useState('');
+    const [phoneItems, setPhoneItems] = useState([
+      { label: '+65', value: '+65' },
+      { label: '+60', value: '+60' },
+      { label: '+84', value: '+84' },
+      { label: '+1', value: '+1' },
+      { label: '+44', value: '+44' },
+      { label: '+81', value: '+81' },
+    ]);
 
   const signUp = async () => {
-        if (!email || !password) {
-            alert('Please enter both email and password.');
+        if (!name || !place || !email || !password || !phone || !confirmPassword) {
+            alert('Please enter all required fields.');
             return;
         }
 
@@ -35,7 +54,7 @@ export default function SignUp() {
       try {
         await auth().createUserWithEmailAndPassword(email, password);
         alert('Check your email to verify your account!');
-        router.navigate('/(auth)/home')
+        router.navigate('/(auth)/(nav)/home')
       } catch (e: any) {
         alert('Registration Failed: ' + e.message);
       } finally {
@@ -55,7 +74,9 @@ export default function SignUp() {
             <View style={styles.container}>
               <Text style={styles.title}>Create New Account</Text>
 
-              <Text style={styles.label}>Name</Text>
+              <Text style={styles.label}>Name
+                <Text style={styles.required}>*</Text>
+              </Text>
               <TextInput
                 style={styles.input}
                 placeholder="E.g: Timothy koh"
@@ -63,15 +84,28 @@ export default function SignUp() {
                 onChangeText={setName}
               />
 
-              <Text style={styles.label}>Place</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Select"
-                value={place}
-                onChangeText={setPlace}
-              />
-
-              <Text style={styles.label}>Email Address</Text>
+              <Text style={styles.label}>Place
+                <Text style={styles.required}>*</Text>
+              </Text>
+              <View style={{ zIndex: 3000, marginHorizontal: 10, marginBottom: 15 }}>
+                <View style={{ height: openPlace ? 200 : 50 }}>
+                  <DropDownPicker
+                    open={openPlace}
+                    value={place}
+                    items={placeItems}
+                    setOpen={setOpenPlace}
+                    setValue={setPlace}
+                    setItems={setPlaceItems}
+                    searchable={true}
+                    placeholder="Select country"
+                    zIndex={3000}
+                    listMode="MODAL"
+                  />
+                </View>
+              </View>
+              <Text style={styles.label}>Email Address
+                <Text style={styles.required}>*</Text>
+              </Text>
               <TextInput
                 style={styles.input}
                 placeholder="user@mail.com"
@@ -80,16 +114,37 @@ export default function SignUp() {
                 keyboardType="email-address"
               />
 
-              <Text style={styles.label}>Phone Number</Text>
+              <Text style={styles.label}>Phone Number
+                <Text style={styles.required}>*</Text>
+              </Text>
+              <View style={styles.phoneRow}>
+                <View style={styles.phoneCodeWrapper}>
+                  <DropDownPicker
+                    open={openPhone}
+                    value={phoneCode}
+                    items={phoneItems}
+                    setOpen={setOpenPhone}
+                    setValue={setPhoneCode}
+                    setItems={setPhoneItems}
+                    searchable={true}
+                    placeholder="+65"
+                    listMode="MODAL"
+                    closeAfterSelecting={true}
+                  />
+
+              </View>
               <TextInput
-                style={styles.input}
-                placeholder="+91 99887 76655"
+                style={styles.phoneInput}
+                placeholder="Phone Number"
                 value={phone}
                 onChangeText={setPhone}
                 keyboardType="phone-pad"
               />
+              </View>
 
-              <Text style={styles.label}>Password</Text>
+              <Text style={styles.label}>Password
+                <Text style={styles.required}>*</Text>
+              </Text>
               <TextInput
                 style={styles.input}
                 placeholder="Enter Password"
@@ -98,7 +153,9 @@ export default function SignUp() {
                 secureTextEntry
               />
 
-              <Text style={styles.label}>Confirm Password</Text>
+              <Text style={styles.label}>Confirm Password
+                <Text style={styles.required}>*</Text>
+              </Text>
               <TextInput
                 style={styles.input}
                 placeholder="Enter Password"
@@ -117,22 +174,15 @@ export default function SignUp() {
                 <View style={styles.line} />
               </View>
 
-              <View style={styles.socialRow}>
-                <TouchableOpacity style={styles.socialBtn}>
-                  <Image source={require('../assets/images/facebook-logo.png')} style={styles.socialIcon} />
-                  <Text style={styles.socialTextFacebook}>Facebook</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.socialBtn}>
-                  <Image source={require('../assets/images/gmail-logo.png')} style={styles.socialIcon} />
-                  <Text style={styles.socialTextGmail}>Gmail</Text>
-                </TouchableOpacity>
-              </View>
-
               <TouchableOpacity onPress={() => router.back()}>
                 <Text style={styles.bottomText}>
                   Already have an account? <Text style={styles.loginNow}>Login Now</Text>
                 </Text>
               </TouchableOpacity>
+
+              <Text style={styles.mandatoryNote}>
+                <Text style={styles.required}>*</Text> Mandatory fields
+              </Text>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -140,7 +190,6 @@ export default function SignUp() {
     </ImageBackground>
   );
 }
-
 const styles = StyleSheet.create({
   bg: {
     flex: 1,
@@ -169,6 +218,9 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 5,
   },
+  required: {
+  color: 'red',
+},
   title: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -179,6 +231,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginLeft: 10,
     marginBottom: 5,
+  },
+  mandatoryNote: {
+    textAlign: 'left',
+    color: '#777',
+    fontSize: 12,
+    marginLeft: 15,
+    marginBottom: 10,
   },
   input: {
     backgroundColor: '#fff',
@@ -205,6 +264,28 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
+  phoneRow: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: 15,
+  marginHorizontal: 10,
+},
+phoneCodeWrapper: {
+  width: '30%',
+  zIndex: 2000,
+},
+phoneInput: {
+  width: '65%',
+  backgroundColor: '#fff',
+  borderRadius: 8,
+  borderWidth: 1,
+  borderColor: '#ccc',
+  paddingHorizontal: 15,
+  paddingVertical: 12,
+  fontSize: 14,
+},
+
   orLine: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -269,5 +350,3 @@ const styles = StyleSheet.create({
 function setLoading(arg0: boolean) {
     throw new Error('Function not implemented.');
 }
-
-

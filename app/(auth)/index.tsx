@@ -1,6 +1,7 @@
-import auth from '@react-native-firebase/auth';
+import auth, { FacebookAuthProvider, getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithCredential } from '@react-native-firebase/auth';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -15,8 +16,80 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { AccessToken, LoginManager } from 'react-native-fbsdk-next';
 
 export default function Index() {
+
+  // Set an initializing state whilst Firebase connects
+  const [initializing, setInitializing] = useState(true);
+  const [user, setUser] = useState<import('@react-native-firebase/auth').FirebaseAuthTypes.User | null>(null);
+
+  // Handle user state changes
+  function handleAuthStateChanged(user: import('@react-native-firebase/auth').FirebaseAuthTypes.User | null) {
+    setUser(user);
+    if (initializing) setInitializing(false);
+  }
+
+  useEffect(() => {
+    const subscriber = onAuthStateChanged(getAuth(), handleAuthStateChanged);
+    return subscriber; // unsubscribe on unmount
+  }, []);
+  
+  useEffect(() =>{
+      GoogleSignin.configure({
+        webClientId: '546324666380-ikcoukp0rdcl78md8bir4ke99h1enjos.apps.googleusercontent.com',
+      });
+    }, []);
+
+    async function onGoogleButtonPress() {
+      // Check if your device supports Google Play
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+
+      // 🔄 Sign out to force account chooser next time
+      await GoogleSignin.signOut();
+
+      // Get the users ID token
+      const signInResult = await GoogleSignin.signIn();
+
+      // Try the new style of google-sign in result, from v13+ of that module
+      const idToken = signInResult.data?.idToken;
+      if (!idToken) {
+        throw new Error('No ID token found');
+      }
+
+      // Create a Google credential with the token
+      if (!signInResult.data) {
+        throw new Error('Google sign-in result data is null');
+      }
+      const googleCredential = GoogleAuthProvider.credential(signInResult.data.idToken);
+      console.log(idToken, googleCredential);
+
+      // Sign-in the user with the credential
+      return signInWithCredential(getAuth(), googleCredential);
+    }
+
+    async function onFacebookButtonPress() {
+      // Attempt login with permissions
+      const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
+
+      if (result.isCancelled) {
+        throw 'User cancelled the login process';
+      }
+
+      // Once signed in, get the users AccessToken
+      const data = await AccessToken.getCurrentAccessToken();
+
+      if (!data) {
+        throw 'Something went wrong obtaining access token';
+      }
+
+      // Create a Firebase credential with the AccessToken
+      const facebookCredential = FacebookAuthProvider.credential(data.accessToken);
+
+      // Sign-in the user with the credential
+      return signInWithCredential(getAuth(), facebookCredential);
+    }
+
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -93,11 +166,33 @@ export default function Index() {
           </View>
 
           <View style={styles.socialRow}>
-            <TouchableOpacity style={styles.socialBtn}>
+            <TouchableOpacity
+              style={styles.socialBtn}
+              onPress={async () => {
+                try {
+                  await onFacebookButtonPress();
+                  Alert.alert('Signed in with Facebook!');
+                  router.navigate('/(auth)/(nav)/home');    
+                } catch (e: any) {
+                  Alert.alert('Facebook Sign-In failed:', e.message);
+                }
+              }}>
               <Image source={require('../../assets/images/facebook-logo.png')} style={styles.socialIcon} />
               <Text style={styles.socialTextFacebook}>Facebook</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.socialBtn}>
+
+            <TouchableOpacity
+              style={styles.socialBtn}
+              onPress={async () => {
+                try {
+                  await onGoogleButtonPress();
+                  Alert.alert('Signed in with Google!');
+                  router.navigate('/(auth)/(nav)/home');
+                } catch (e: any) {
+                  Alert.alert('Google Sign-In failed:', e.message);
+                }
+              }}
+            >
               <Image source={require('../../assets/images/gmail-logo.png')} style={styles.socialIcon} />
               <Text style={styles.socialTextGmail}>Gmail</Text>
             </TouchableOpacity>

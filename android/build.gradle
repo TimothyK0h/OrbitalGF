@@ -10,12 +10,14 @@ buildscript {
     targetSdkVersion = 35
     compileSdkVersion = 35
     ndkVersion = "26.1.10909125"
+    buildToolsVersion = "34.0.0"
+    googlePlayServicesAuthVersion = "20.7.0"
   }
   dependencies {
-        classpath 'com.google.gms:google-services:4.4.1'
-    classpath('com.android.tools.build:gradle')
-    classpath('com.facebook.react:react-native-gradle-plugin')
-    classpath('org.jetbrains.kotlin:kotlin-gradle-plugin')
+    classpath 'com.google.gms:google-services:4.4.1'
+    classpath 'com.android.tools.build:gradle:8.4.0'
+    classpath 'com.facebook.react:react-native-gradle-plugin'
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.23"
   }
 }
 
@@ -41,4 +43,4 @@ allprojects {
 }
 
 apply plugin: "expo-root-project"
-apply plugin: "com.facebook.react.rootproject"
+apply plugin: 'com.google.gms.google-services'

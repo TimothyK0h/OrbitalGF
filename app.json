@@ -30,6 +30,19 @@
     "plugins": [
       "expo-router",
       [
+        "react-native-fbsdk-next",
+        {
+          "appID": "1031236475510298",
+          "clientToken": "a6d54d99e15b6c162a3ea62cb09a8743",
+          "displayName": "goon-foresters",
+          "scheme": "fb1031236475510298",
+          "advertiserIDCollectionEnabled": false,
+          "autoLogAppEventsEnabled": false,
+          "isAutoInitEnabled": true,
+          "iosUserTrackingPermission": "This identifier will be used to deliver personalized ads to you."
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
@@ -38,12 +51,14 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      ["expo-build-properties", {
-        "ios": {
-          "useFrameworks": "static"
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
         }
-      } 
-    ],
+      ],
       "@react-native-firebase/app",
       "@react-native-firebase/auth"
     ],
