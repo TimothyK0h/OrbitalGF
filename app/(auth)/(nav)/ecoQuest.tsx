@@ -1,13 +1,6 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
-import {
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function EcoQuest() {
   const router = useRouter();
