@@ -81,32 +81,52 @@ export default function Home() {
             style={styles.featureBox}
             onPress={() => router.push('/(auth)/(nav)/ecoQuest')}
           >
-            <View style={[styles.featureColor, { backgroundColor: '#FACC15' }]} />
+            <Image
+              source={require('../../../assets/images/eco-quest.png')}
+              style={styles.featureImage}
+              resizeMode="contain"
+            />
             <Text style={styles.featureLabel}>Eco‑quests</Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             style={styles.featureBox}
             onPress={() => router.push('/(auth)/(nav)/greenRec')}
           >
-            <View style={[styles.featureColor, { backgroundColor: '#FB7185' }]} />
+            <Image
+              source={require('../../../assets/images/eco-rec.png')}
+              style={styles.featureImage}
+              resizeMode="contain"
+            />
             <Text style={styles.featureLabel}>Green rec</Text>
           </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.featureBox}
             onPress={() => router.push('/(auth)/(nav)/impactDashboard')}
           >
-            <View style={[styles.featureColor, { backgroundColor: '#D4A373' }]} />
+            <Image
+              source={require('../../../assets/images/impact-dash.png')}
+              style={styles.featureImage}
+              resizeMode="contain"
+            />
             <Text style={styles.featureLabel}>Impact dashboard</Text>
           </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.featureBox}
             onPress={() => router.push('/(auth)/(nav)/feedback')}
           >
-            <View style={[styles.featureColor, { backgroundColor: '#60A5FA' }]} />
+            <Image
+              source={require('../../../assets/images/feedback.png')}
+              style={styles.featureImage}
+              resizeMode="contain"
+            />
             <Text style={styles.featureLabel}>Feedback</Text>
           </TouchableOpacity>
         </View>
+
+
       </ScrollView>
     </View>
   );
@@ -122,6 +142,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  featureImage: {
+    width: '100%',
+    height: 60, // adjust based on your layout
+    borderRadius: 8,
+    marginBottom: 8,
   },
   logo: { fontSize: 20, fontWeight: 'bold', color: '#fff' },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },

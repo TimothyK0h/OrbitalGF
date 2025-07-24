@@ -1,9 +1,106 @@
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 import { useRouter } from 'expo-router';
-import React from 'react';
-import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function EcoPointsOverview() {
   const router = useRouter();
+
+  const [dropletInput, setDropletInput] = useState<{ [key: string]: string }>({});
+  const [ecoPoints, setEcoPoints] = useState<number>(0);
+  const [treeStages, setTreeStages] = useState<{ [treeId: string]: string }>({});
+
+  const DROPLET_COST = 15;
+
+  const getGrowthStage = (progress: number) => {
+    if (progress >= 100) return 'Fully Grown';
+    if (progress >= 80) return 'Sapling';
+    if (progress >= 60) return 'Seedling';
+    if (progress >= 40) return 'Sprout';
+    if (progress >= 20) return 'Seed';
+    return 'Unknown';
+  };
+
+  const fetchEcoPoints = async () => {
+    const userId = auth().currentUser?.uid;
+    if (!userId) return;
+
+    const userDoc = await firestore().collection('users').doc(userId).get();
+    setEcoPoints(userDoc.data()?.ecoPoints ?? 0);
+  };
+
+  const fetchTrees = async () => {
+    const userId = auth().currentUser?.uid;
+    if (!userId) return;
+
+    const treeIds = ['Tree 1', 'Tree 2', 'Tree 3'];
+    const treeStagesData: { [key: string]: string } = {};
+
+    for (const treeId of treeIds) {
+      const treeDoc = await firestore()
+        .collection('users')
+        .doc(userId)
+        .collection('trees')
+        .doc(treeId)
+        .get();
+
+      treeStagesData[treeId] = treeDoc.data()?.growthStage ?? 'Unknown';
+    }
+
+    setTreeStages(treeStagesData);
+  };
+
+  useEffect(() => {
+    fetchEcoPoints();
+    fetchTrees();
+  }, []);
+
+  const waterTree = async (treeId: string, droplets: number) => {
+    console.log('Clicked to water:', treeId, droplets);
+
+    try {
+      const userId = auth().currentUser?.uid;
+      if (!userId || droplets <= 0) return alert('Invalid input.');
+
+      const userRef = firestore().collection('users').doc(userId);
+      const treeRef = userRef.collection('trees').doc(treeId);
+
+      const userSnap = await userRef.get();
+      const treeSnap = await treeRef.get();
+
+      const currentEcoPoints = userSnap.data()?.ecoPoints ?? 0;
+      const currentDroplets = treeSnap.data()?.wateredDroplets ?? 0;
+
+      const cost = droplets * 15;
+
+      if (currentEcoPoints < cost) return alert('Not enough eco-points!');
+      if (currentDroplets >= 100) return alert(`${treeId} is already fully grown!`);
+
+      const newDroplets = Math.min(currentDroplets + droplets, 100);
+      const newStage = getGrowthStage(newDroplets);
+
+      await userRef.update({ ecoPoints: currentEcoPoints - cost });
+
+      await treeRef.update({
+        wateredDroplets: newDroplets,
+        growthProgress: newDroplets,
+        growthStage: newStage,
+        lastUpdated: new Date(),
+      });
+
+      alert('Watered ${treeId} with ${droplets} droplets!');
+      setDropletInput((prev) => ({ ...prev, [treeId]: '' }));
+      setEcoPoints(currentEcoPoints - cost);
+      setTreeStages((prev) => ({ ...prev, [treeId]: newStage }));
+
+      router.push(`/(auth)/(nav)/treePlanting?tree=${treeId}`);
+    } catch (err) {
+      console.error('🔥 Watering Error:', err);
+      alert('An error occurred while watering the tree.');
+    }
+  };
+
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -21,7 +118,7 @@ export default function EcoPointsOverview() {
         <View style={styles.pointsBox}>
           <Image source={require('../../../assets/images/Database.png')} style={styles.coinIcon} />
           <Text style={styles.earnedText}>Earned Eco-points</Text>
-          <Text style={styles.points}>120 points</Text>
+          <Text style={styles.points}>{ecoPoints} points</Text>
         </View>
       </View>
 
@@ -64,18 +161,30 @@ export default function EcoPointsOverview() {
               <Text style={styles.treeStage}>
                 Growth Stage{' '}
                 <Text style={styles.treeStageType}>
-                  {['Seedling', 'Sapling', 'Seed'][index]}
+                  {treeStages[tree] || 'Unknown'}
                 </Text>
               </Text>
             </View>
             <Image source={require('../../../assets/images/Droplet.png')} style={styles.droplet} />
+
             <TextInput
               style={styles.waterInput}
               keyboardType="numeric"
               placeholder="0"
               placeholderTextColor="#111"
+              value={dropletInput[tree] || ''}
+              onChangeText={(text) =>
+                setDropletInput((prev: { [key: string]: string }) => ({ ...prev, [tree]: text }))
+              }
             />
-            <Text style={styles.arrow}>➔</Text>
+
+            <TouchableOpacity onPress={() => {
+              const parsed = Number(dropletInput[tree]?.trim());
+              if (isNaN(parsed) || parsed <= 0) return alert('Enter a number > 0');
+              waterTree(tree, parsed);
+            }}>
+              <Text style={styles.arrow}>➔</Text>
+            </TouchableOpacity>
           </View>
         ))}
       </View>
@@ -275,7 +384,13 @@ const styles = StyleSheet.create({
     paddingBottom: 0,
   },
   arrow: {
-    fontSize: 16,
+    fontSize: 20,
+    color: '#1bbc65',
+    fontWeight: 'bold',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: '#e0f2f1',
+    borderRadius: 6,
   },
   galleryRow: {
     flexDirection: 'row',
@@ -288,3 +403,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+
+function fetchTrees() {
+  throw new Error('Function not implemented.');
+}
