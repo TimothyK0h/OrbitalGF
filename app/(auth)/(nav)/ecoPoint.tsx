@@ -57,7 +57,22 @@ export default function EcoPointsOverview() {
   }, []);
 
   const waterTree = async (treeId: string, droplets: number) => {
+    // debugging logs
     console.log('Clicked to water:', treeId, droplets);
+    console.log(auth().currentUser?.uid, ecoPoints);
+    console.log(auth())
+    try {
+      const snapshot = await firestore()
+        .collection('users')
+        .doc(auth().currentUser?.uid)
+        .collection('trees')
+        .get();
+
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      console.log('Fetched trees:', data);
+    } catch (error) {
+      console.error('Error fetching trees:', error);
+    }
 
     try {
       const userId = auth().currentUser?.uid;
