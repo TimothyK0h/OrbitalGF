@@ -13,45 +13,58 @@ export default function NavLayout() {
 
       <View style={styles.navbar}>
         <TouchableOpacity
-        onPress={() =>
-            path !== "/(auth)/(nav)/ecoPoint" && router.push("/(auth)/(nav)/ecoPoint")
+          style={styles.navItem}
+          onPress={() =>
+            path !== "/(auth)/(nav)/ecoPoint" &&
+            router.push("/(auth)/(nav)/ecoPoint")
           }
         >
-          <Ionicons name="wallet-outline" size={30} color="#000" />
+          <Ionicons name="wallet-outline" size={24} color="#000" />
+          <Text style={styles.navLabel}>Eco-points</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-        onPress={() =>
-            path !== "/(auth)/(nav)/profile" && router.push("/(auth)/(nav)/profile")
+          style={styles.navItem}
+          onPress={() =>
+            path !== "/(auth)/(nav)/profile" &&
+            router.push("/(auth)/(nav)/profile")
           }
         >
-          <MaterialIcons name="edit" size={30} color="#000" />
+          <MaterialIcons name="edit" size={24} color="#000" />
+          <Text style={styles.navLabel}>Profile</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-        onPress={() =>
+          style={styles.navCenterWrapper}
+          onPress={() =>
             path !== "/(auth)/(nav)/home" && router.push("/(auth)/(nav)/home")
-          }>
+          }
+        >
           <View style={styles.navCenter}>
-            <Ionicons name="home" size={30} color="#fff" />
+            <Ionicons name="home" size={28} color="#fff" />
             <Text style={styles.navCenterText}>Home</Text>
           </View>
         </TouchableOpacity>
 
         <TouchableOpacity
-        onPress={() =>
-            path !== "/(auth)/(nav)/leaderboard" && router.push("/(auth)/(nav)/leaderboard")
+          style={styles.navItem}
+          onPress={() =>
+            path !== "/(auth)/(nav)/leaderboard" &&
+            router.push("/(auth)/(nav)/leaderboard")
           }
         >
-          <Ionicons name="bar-chart-outline" size={30} color="#000" />
+          <Ionicons name="bar-chart-outline" size={24} color="#000" />
+          <Text style={styles.navLabel}>Leaderboard</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
+          style={styles.navItem}
           onPress={() =>
             path !== "/(auth)/settings" && router.push("/(auth)/settings")
           }
         >
-          <Ionicons name="settings-outline" size={30} color="#000" />
+          <Ionicons name="settings-outline" size={24} color="#000" />
+          <Text style={styles.navLabel}>Settings</Text>
         </TouchableOpacity>
       </View>
     </>
@@ -68,8 +81,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     flexDirection: "row",
     justifyContent: "space-around",
-    alignItems: "center",
-    paddingBottom: 10,
+    alignItems: "flex-end",
+    paddingBottom: 12,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     elevation: 10,
@@ -77,14 +90,28 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 5,
   },
+  navItem: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  navLabel: {
+    fontSize: 10,
+    color: "#000",
+    marginTop: 4,
+  },
+  navCenterWrapper: {
+    marginTop: -20,
+  },
   navCenter: {
     backgroundColor: "#22C55E",
     padding: 12,
     borderRadius: 300,
     alignItems: "center",
+    justifyContent: "center",
   },
   navCenterText: {
     color: "#fff",
     fontSize: 10,
+    marginTop: 2,
   },
 });

@@ -1,6 +1,6 @@
+import { Feather, Ionicons } from '@expo/vector-icons';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
-import { Feather, Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -50,6 +50,59 @@ export default function TreePlanting() {
 
   const [growthStage, setGrowthStage] = useState('Unknown');
   const [growthProgress, setGrowthProgress] = useState(0);
+  const [waterPoints, setWaterPoints] = useState(15);
+
+  const increaseWater = () => setWaterPoints(waterPoints + 1);
+  const decreaseWater = () => setWaterPoints(Math.max(1, waterPoints - 1));
+
+  const getGrowthStage = (progress: number) => {
+    if (progress >= 100) return 'Fully Grown';
+    if (progress >= 80) return 'Sapling';
+    if (progress >= 60) return 'Seedling';
+    if (progress >= 40) return 'Sprout';
+    if (progress >= 20) return 'Seed';
+    return 'Unknown';
+  };
+
+  const waterTree = async (treeId: string, droplets: number) => {
+    try {
+      const userId = auth().currentUser?.uid;
+      if (!userId || droplets <= 0) return alert('Invalid input.');
+
+      const userRef = firestore().collection('users').doc(userId);
+      const treeRef = userRef.collection('trees').doc(treeId);
+
+      const userSnap = await userRef.get();
+      const treeSnap = await treeRef.get();
+
+      const currentEcoPoints = userSnap.data()?.ecoPoints ?? 0;
+      const currentDroplets = treeSnap.data()?.wateredDroplets ?? 0;
+
+      const cost = droplets * 15;
+
+      if (currentEcoPoints < cost) return alert('Not enough eco-points!');
+      if (currentDroplets >= 100) return alert(`${treeId} is already fully grown!`);
+
+      const newDroplets = Math.min(currentDroplets + droplets, 100);
+      const newStage = getGrowthStage(newDroplets);
+
+      await userRef.update({ ecoPoints: currentEcoPoints - cost });
+
+      await treeRef.update({
+        wateredDroplets: newDroplets,
+        growthProgress: newDroplets,
+        growthStage: newStage,
+        lastUpdated: new Date(),
+      });
+
+      alert(`Watered ${treeId} with ${droplets} droplets!`);
+      setGrowthStage(newStage);
+      setGrowthProgress(newDroplets);
+    } catch (err) {
+      console.error('🔥 Watering Error:', err);
+      alert('An error occurred while watering the tree.');
+    }
+  };
 
   const getTreeImage = () => {
     const validStages = ['Seed', 'Sprout', 'Seedling', 'Sapling', 'Fully Grown'] as const;
@@ -108,7 +161,7 @@ export default function TreePlanting() {
         </View>
       </View>
 
-      {/* Tree Display Area */}
+      {/* Tree Display */}
       <View style={styles.treeCard}>
         <Image source={getTreeImage()} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
       </View>
@@ -130,12 +183,34 @@ export default function TreePlanting() {
         </TouchableOpacity>
       </View>
 
-      {/* Growth Progress Bar */}
+      {/* Status Bar with Growth + Water */}
       <View style={styles.statusBar}>
         <View style={styles.progressSection}>
           <Text style={styles.statusLabel}>Growth progress</Text>
           <View style={styles.progressBar}>
             <View style={[styles.progressFill, { width: `${growthProgress}%` }]} />
+          </View>
+        </View>
+
+        <View style={styles.waterSection}>
+          <Text style={styles.statusLabel}>Water with points</Text>
+          <View style={styles.waterRow}>
+            <Ionicons name="water-outline" size={18} color="#00b0f0" />
+            <Text style={styles.waterAmount}>{waterPoints}</Text>
+            <View style={styles.chevronControl}>
+              <TouchableOpacity onPress={increaseWater}>
+                <Ionicons name="chevron-up" size={14} color="#00b0f0" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={decreaseWater}>
+                <Ionicons name="chevron-down" size={14} color="#00b0f0" />
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity
+              onPress={() => waterTree(treeName, waterPoints)}
+              style={styles.waterButton}
+            >
+              <Text style={styles.waterButtonText}>Water</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -254,7 +329,7 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: 10,
-    width: '100%',
+    width: 100,
     backgroundColor: '#ccc',
     borderRadius: 5,
     overflow: 'hidden',
@@ -262,5 +337,36 @@ const styles = StyleSheet.create({
   progressFill: {
     height: '100%',
     backgroundColor: '#6fcf97',
+  },
+  waterSection: {
+    alignItems: 'flex-end',
+  },
+  waterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  waterAmount: {
+    fontSize: 16,
+    color: '#00b0f0',
+    fontWeight: '600',
+  },
+  chevronControl: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 2,
+    marginLeft: 2,
+  },
+  waterButton: {
+    backgroundColor: '#1bbc65',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginLeft: 6,
+  },
+  waterButtonText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
   },
 });
