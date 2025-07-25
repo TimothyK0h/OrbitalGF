@@ -1,10 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 export default function Home() {
   const router = useRouter();
+  const treeList = ['Tomato', 'Strawberry', 'Bean'];
 
   return (
     <View style={styles.container}>
@@ -28,7 +36,7 @@ export default function Home() {
 
       {/* Forest Image */}
       <Image
-        source={require('../../../assets/images/forest.jpg')}
+        source={require('../../../assets/images/forest.png')}
         style={styles.forestImage}
         resizeMode="contain"
       />
@@ -42,34 +50,16 @@ export default function Home() {
         {/* Tree Gallery */}
         <Text style={styles.sectionTitle}>Tree gallery</Text>
         <View style={styles.treeRow}>
-          <TouchableOpacity
-            style={styles.treeBox}
-            onPress={() => router.push('/(auth)/(nav)/treeGallery')}
-          >
-            <View style={[styles.treeColor, { backgroundColor: treeColors[0] }]} />
-            <Text style={styles.treeLabel}>Tree 1</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.treeBox}
-            onPress={() => router.push('/(auth)/(nav)/treeGallery')}
-          >
-            <View style={[styles.treeColor, { backgroundColor: treeColors[1] }]} />
-            <Text style={styles.treeLabel}>Tree 2</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.treeBox}
-            onPress={() => router.push('/(auth)/(nav)/treeGallery')}
-          >
-            <View style={[styles.treeColor, { backgroundColor: treeColors[2] }]} />
-            <Text style={styles.treeLabel}>Tree 3</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.treeBox}
-            onPress={() => router.push('/(auth)/(nav)/treeGallery')}
-          >
-            <View style={[styles.treeColor, { backgroundColor: treeColors[3] }]} />
-            <Text style={styles.treeLabel}>Tree 4</Text>
-          </TouchableOpacity>
+          {treeList.map((tree, index) => (
+            <TouchableOpacity
+              key={tree}
+              style={styles.treeBox}
+              onPress={() => router.push({ pathname: '/(auth)/(nav)/treePlanting', params: { tree } })}
+            >
+              <View style={[styles.treeColor, { backgroundColor: treeColors[index] }]} />
+              <Text style={styles.treeLabel}>{tree}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
         <View style={styles.divider} />
@@ -125,14 +115,12 @@ export default function Home() {
             <Text style={styles.featureLabel}>Feedback</Text>
           </TouchableOpacity>
         </View>
-
-
       </ScrollView>
     </View>
   );
 }
 
-const treeColors = ['#86EFAC', '#5EEAD4', '#A3E635', '#67E8F9'];
+const treeColors = ['#86EFAC', '#F9A8D4', '#A3E635'];
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#22C55E' },
@@ -145,7 +133,7 @@ const styles = StyleSheet.create({
   },
   featureImage: {
     width: '100%',
-    height: 60, // adjust based on your layout
+    height: 60,
     borderRadius: 8,
     marginBottom: 8,
   },
@@ -178,7 +166,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     rowGap: 20,
   },
-  treeBox: { alignItems: 'center', width: "22%", height: 100 },
+  treeBox: { alignItems: 'center', width: '30%', height: 100 },
   treeColor: { width: 80, height: 80, borderRadius: 14 },
   treeLabel: { marginTop: 8, fontSize: 14, fontWeight: '500' },
   divider: { height: 1, backgroundColor: '#ddd', marginVertical: 20 },

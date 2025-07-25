@@ -1,19 +1,93 @@
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 import { Feather, Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import {
+  Image,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 
+const treeImages: { [key: string]: any } = {
+  Tomato1: require('../../../assets/images/tomato1.png'),
+  Tomato2: require('../../../assets/images/tomato2.png'),
+  Tomato3: require('../../../assets/images/tomato3.png'),
+  Tomato4: require('../../../assets/images/tomato4.png'),
+  Tomato5: require('../../../assets/images/tomato5.png'),
+
+  Straw1: require('../../../assets/images/straw1.png'),
+  Straw2: require('../../../assets/images/straw2.png'),
+  Straw3: require('../../../assets/images/straw3.png'),
+  Straw4: require('../../../assets/images/straw4.png'),
+  Straw5: require('../../../assets/images/straw5.png'),
+
+  Bean1: require('../../../assets/images/bean1.png'),
+  Bean2: require('../../../assets/images/bean2.png'),
+  Bean3: require('../../../assets/images/bean3.png'),
+  Bean4: require('../../../assets/images/bean4.png'),
+  Bean5: require('../../../assets/images/bean5.png'),
+
+  Unknown: require('../../../assets/images/unknown.png'),
+};
+
+const trees = ['Tomato', 'Strawberry', 'Bean'];
+const stageMap: Record<'Seed' | 'Sprout' | 'Seedling' | 'Sapling' | 'Fully Grown', number> = {
+  'Seed': 1,
+  'Sprout': 2,
+  'Seedling': 3,
+  'Sapling': 4,
+  'Fully Grown': 5,
+};
+
 export default function TreePlanting() {
   const router = useRouter();
-  const [waterPoints, setWaterPoints] = useState(15);
+  const { tree } = useLocalSearchParams<{ tree?: string }>();
+  const currentIndex = trees.findIndex(t => t.toLowerCase() === tree?.toLowerCase());
+  const treeName = trees[currentIndex] || 'Tomato';
 
-  const increaseWater = () => setWaterPoints(waterPoints + 1);
-  const decreaseWater = () => setWaterPoints(Math.max(1, waterPoints - 1));
+  const [growthStage, setGrowthStage] = useState('Unknown');
+  const [growthProgress, setGrowthProgress] = useState(0);
+
+  const getTreeImage = () => {
+    const validStages = ['Seed', 'Sprout', 'Seedling', 'Sapling', 'Fully Grown'] as const;
+    const stageKey = validStages.includes(growthStage as any) ? growthStage as keyof typeof stageMap : undefined;
+    const stageNum = stageKey ? stageMap[stageKey] : undefined;
+    const name = treeName.toLowerCase();
+    const key = stageNum
+      ? name === 'strawberry' ? `Straw${stageNum}` :
+        name === 'bean' ? `Bean${stageNum}` :
+        name === 'tomato' ? `Tomato${stageNum}` : 'Unknown'
+      : 'Unknown';
+
+    return treeImages[key] || treeImages['Unknown'];
+  };
+
+  const navigateTree = (direction: 'prev' | 'next') => {
+    const newIndex =
+      direction === 'prev'
+        ? (currentIndex + trees.length - 1) % trees.length
+        : (currentIndex + 1) % trees.length;
+    router.push({ pathname: '/(auth)/(nav)/treePlanting', params: { tree: trees[newIndex] } });
+  };
+
+  useEffect(() => {
+    const fetchTree = async () => {
+      const userId = auth().currentUser?.uid;
+      if (!userId || !treeName) return;
+      const doc = await firestore()
+        .collection('users')
+        .doc(userId)
+        .collection('trees')
+        .doc(treeName)
+        .get();
+      setGrowthStage(doc.data()?.growthStage || 'Unknown');
+      setGrowthProgress(doc.data()?.growthProgress || 0);
+    };
+    fetchTree();
+  }, [treeName]);
 
   return (
     <View style={styles.container}>
@@ -36,44 +110,32 @@ export default function TreePlanting() {
 
       {/* Tree Display Area */}
       <View style={styles.treeCard}>
-        {/* This area could be used for tree visualization */}
+        <Image source={getTreeImage()} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
       </View>
 
-      {/* Tree Base Bar (positioned above the status bar) */}
+      {/* Tree Base Bar */}
       <View style={styles.treeBaseBar}>
-        <Text style={styles.treeStage}>Seedling</Text>
+        <Text style={styles.treeStage}>{growthStage}</Text>
         <View style={styles.treeNav}>
-          <Ionicons name="chevron-back" size={16} color="#fff" />
-          <Text style={styles.treeName}>Tree 1</Text>
-          <Ionicons name="chevron-forward" size={16} color="#fff" />
+          <TouchableOpacity onPress={() => navigateTree('prev')}>
+            <Ionicons name="chevron-back" size={16} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.treeName}>{treeName}</Text>
+          <TouchableOpacity onPress={() => navigateTree('next')}>
+            <Ionicons name="chevron-forward" size={16} color="#fff" />
+          </TouchableOpacity>
         </View>
         <TouchableOpacity>
           <Feather name="share-2" size={16} color="#fff" />
         </TouchableOpacity>
       </View>
 
-      {/* Floating Growth + Water Bar */}
+      {/* Growth Progress Bar */}
       <View style={styles.statusBar}>
         <View style={styles.progressSection}>
           <Text style={styles.statusLabel}>Growth progress</Text>
           <View style={styles.progressBar}>
-            <View style={styles.progressFill} />
-          </View>
-        </View>
-
-        <View style={styles.waterSection}>
-          <Text style={styles.statusLabel}>Water with points</Text>
-          <View style={styles.waterRow}>
-            <Ionicons name="water-outline" size={18} color="#00b0f0" />
-            <Text style={styles.waterAmount}>{waterPoints}</Text>
-            <View style={styles.chevronControl}>
-              <TouchableOpacity onPress={increaseWater}>
-                <Ionicons name="chevron-up" size={14} color="#00b0f0" />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={decreaseWater}>
-                <Ionicons name="chevron-down" size={14} color="#00b0f0" />
-              </TouchableOpacity>
-            </View>
+            <View style={[styles.progressFill, { width: `${growthProgress}%` }]} />
           </View>
         </View>
       </View>
@@ -139,7 +201,7 @@ const styles = StyleSheet.create({
   },
   treeBaseBar: {
     position: 'absolute',
-    bottom: 160, 
+    bottom: 160,
     backgroundColor: '#8a5d20',
     paddingVertical: 10,
     paddingHorizontal: 15,
@@ -169,7 +231,7 @@ const styles = StyleSheet.create({
   },
   statusBar: {
     position: 'absolute',
-    bottom: 90, 
+    bottom: 90,
     left: 0,
     right: 0,
     backgroundColor: '#fff',
@@ -192,33 +254,13 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: 10,
-    width: 100,
+    width: '100%',
     backgroundColor: '#ccc',
     borderRadius: 5,
     overflow: 'hidden',
   },
   progressFill: {
-    width: '40%',
     height: '100%',
     backgroundColor: '#6fcf97',
-  },
-  waterSection: {
-    alignItems: 'flex-end',
-  },
-  waterRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  waterAmount: {
-    fontSize: 16,
-    color: '#00b0f0',
-    fontWeight: '600',
-  },
-  chevronControl: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 2,
-    marginLeft: 2,
   },
 });
