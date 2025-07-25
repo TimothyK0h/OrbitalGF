@@ -32,15 +32,16 @@ async function resetCompletedQuestsByType(questType) {
   try {
     const usersSnap = await db.collection("users").get();
     const defaultQuestsSnap = await db
-        .collection("defaultQuests")
-        .where("type", "==", questType)
-        .get();
+      .collection("defaultQuests")
+      .where("type", "==", questType)
+      .get();
 
-
-    const defaultQuests = defaultQuestsSnap.docs.map((doc) => ({
+    let defaultQuests = defaultQuestsSnap.docs.map((doc) => ({
       id: doc.id,
       data: doc.data(),
     }));
+
+    const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
 
     const userUpdates = usersSnap.docs.map(async (userDoc) => {
       const userId = userDoc.id;
@@ -51,10 +52,10 @@ async function resetCompletedQuestsByType(questType) {
         .where("completed", "==", true)
         .get();
 
-      const updates = completedSnap.docs.map((completedDoc) => {
-        const newQuest =
-          defaultQuests[Math.floor(Math.random() * defaultQuests.length)];
+      const shuffledQuests = shuffle([...defaultQuests]);
 
+      const updates = completedSnap.docs.map((completedDoc, index) => {
+        const newQuest = shuffledQuests[index % shuffledQuests.length]; 
         return userQuestRef.doc(completedDoc.id).set({
           ...newQuest.data,
           completed: false,
@@ -73,3 +74,4 @@ async function resetCompletedQuestsByType(questType) {
     throw err;
   }
 }
+

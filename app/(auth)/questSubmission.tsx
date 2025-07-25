@@ -48,7 +48,7 @@ export default function QuestSubmission() {
         completed: isCompleted,
       });
 
-      Alert.alert('✅ Photo uploaded, progress updated!');
+      Alert.alert('Photo uploaded, progress updated!');
       router.push('/(auth)/(nav)/ecoQuest');
     } catch (error) {
       Alert.alert('❌ Upload failed');
