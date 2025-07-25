@@ -1,9 +1,62 @@
-import { useRouter } from 'expo-router';
-import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
-export default function questSubmission() {
+export default function QuestSubmission() {
   const router = useRouter();
+  const { questId } = useLocalSearchParams(); // get questId from router
+  const [loading, setLoading] = useState(false);
+
+  const handleUpload = async () => {
+    const user = auth().currentUser;
+    if (!user || !questId) {
+      Alert.alert('Missing user or quest ID');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const questRef = firestore()
+        .collection('users')
+        .doc(user.uid)
+        .collection('quests')
+        .doc(String(questId));
+
+      const questSnap = await questRef.get();
+
+      if (!questSnap.exists) {
+        Alert.alert('Quest not found');
+        return;
+      }
+
+      const quest = questSnap.data();
+      const newProgress = (quest?.progress ?? 0) + 1;
+      const isCompleted = newProgress >= (quest?.target ?? 1);
+
+      await questRef.update({
+        progress: newProgress,
+        completed: isCompleted,
+      });
+
+      Alert.alert('✅ Photo uploaded, progress updated!');
+      router.push('/(auth)/(nav)/ecoQuest');
+    } catch (error) {
+      Alert.alert('❌ Upload failed');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -41,12 +94,21 @@ export default function questSubmission() {
       </View>
 
       {/* Upload Button */}
-      <TouchableOpacity style={styles.bottomButton}>
-        <Text style={styles.bottomButtonText}>Upload Photo</Text>
+      <TouchableOpacity
+        style={styles.bottomButton}
+        onPress={handleUpload}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.bottomButtonText}>Upload Photo</Text>
+        )}
       </TouchableOpacity>
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {

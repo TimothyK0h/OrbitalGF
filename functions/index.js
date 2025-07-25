@@ -1,32 +1,75 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
-
-const {setGlobalOptions} = require("firebase-functions");
-const {onRequest} = require("firebase-functions/https");
+const { onRequest } = require("firebase-functions/v2/https");
+const { onSchedule } = require("firebase-functions/v2/scheduler");
 const logger = require("firebase-functions/logger");
 
-// For cost control, you can set the maximum number of containers that can be
-// running at the same time. This helps mitigate the impact of unexpected
-// traffic spikes by instead downgrading performance. This limit is a
-// per-function limit. You can override the limit for each function using the
-// `maxInstances` option in the function's options, e.g.
-// `onRequest({ maxInstances: 5 }, (req, res) => { ... })`.
-// NOTE: setGlobalOptions does not apply to functions using the v1 API. V1
-// functions should each use functions.runWith({ maxInstances: 10 }) instead.
-// In the v1 API, each function can only serve one request per container, so
-// this will be the maximum concurrent request count.
-setGlobalOptions({ maxInstances: 10 });
+const admin = require("firebase-admin");
+admin.initializeApp();
+const db = admin.firestore();
 
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
+exports.resetCompletedDailyQuests = onSchedule(
+  { schedule: "0 16 * * *", timeZone: "Asia/Singapore" }, 
+  async () => {
+    await resetCompletedQuestsByType("daily");
+  }
+);
 
-// exports.helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+
+exports.resetCompletedWeeklyQuests = onSchedule(
+  { schedule: "0 16 * * 1", timeZone: "Asia/Singapore" }, 
+  async () => {
+    await resetCompletedQuestsByType("weekly");
+  }
+);
+
+// THIS IS FOR TESTING
+exports.testResetQuests = onRequest(async (req, res) => {
+  const type = req.query.type || "daily";
+  await resetCompletedQuestsByType(type);
+  res.send(`Tested reset for ${type} quests.`);
+});
+
+async function resetCompletedQuestsByType(questType) {
+  try {
+    const usersSnap = await db.collection("users").get();
+    const defaultQuestsSnap = await db
+        .collection("defaultQuests")
+        .where("type", "==", questType)
+        .get();
+
+
+    const defaultQuests = defaultQuestsSnap.docs.map((doc) => ({
+      id: doc.id,
+      data: doc.data(),
+    }));
+
+    const userUpdates = usersSnap.docs.map(async (userDoc) => {
+      const userId = userDoc.id;
+      const userQuestRef = db.collection("users").doc(userId).collection("quests");
+
+      const completedSnap = await userQuestRef
+        .where("type", "==", questType)
+        .where("completed", "==", true)
+        .get();
+
+      const updates = completedSnap.docs.map((completedDoc) => {
+        const newQuest =
+          defaultQuests[Math.floor(Math.random() * defaultQuests.length)];
+
+        return userQuestRef.doc(completedDoc.id).set({
+          ...newQuest.data,
+          completed: false,
+          assignedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      });
+
+      return Promise.all(updates);
+    });
+
+    await Promise.all(userUpdates);
+    logger.info(`✅ ${questType} quests reset for all users.`);
+    return null;
+  } catch (err) {
+    logger.error(`❌ Failed to reset ${questType} quests:`, err);
+    throw err;
+  }
+}
