@@ -1,5 +1,9 @@
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
+import storage from '@react-native-firebase/storage';
+import * as FileSystem from 'expo-file-system';
+import type { ImagePickerAsset } from 'expo-image-picker';
+import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -14,49 +18,150 @@ import {
 
 export default function QuestSubmission() {
   const router = useRouter();
-  const { questId } = useLocalSearchParams(); // get questId from router
+  const { questId } = useLocalSearchParams();
   const [loading, setLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<ImagePickerAsset | null>(null);
+
+  const handlePickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      setSelectedImage(result.assets[0]);
+    }
+  };
+
+  const handleOpenCamera = async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Camera permission is required');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      setSelectedImage(result.assets[0]);
+    }
+  };
 
   const handleUpload = async () => {
-    const user = auth().currentUser;
-    if (!user || !questId) {
-      Alert.alert('Missing user or quest ID');
+  const user = auth().currentUser;
+  if (!user || !questId) {
+    Alert.alert('Missing user or quest ID');
+    return;
+  }
+
+  if (!selectedImage) {
+    Alert.alert('Please select an image');
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    const questRef = firestore()
+      .collection('users')
+      .doc(user.uid)
+      .collection('quests')
+      .doc(String(questId));
+
+    const questSnap = await questRef.get();
+
+    if (!questSnap.exists) {
+      Alert.alert('Quest not found');
+      return;
+    }
+
+    const quest = questSnap.data();
+    const questTitle = quest?.title || 'Quest';
+
+    const filename = `${Date.now()}.jpg`;
+    const storageRef = storage().ref(`questUploads/${user.uid}/${filename}`);
+
+    // Ensure local file URI
+    let fileUri = selectedImage.uri;
+    if (!fileUri.startsWith('file://')) {
+      const downloaded = await FileSystem.downloadAsync(
+        selectedImage.uri,
+        FileSystem.cacheDirectory + filename
+      );
+      fileUri = downloaded.uri;
+    }
+
+    const fileInfo = await FileSystem.getInfoAsync(fileUri);
+    console.log('File exists:', fileInfo.exists, '| URI:', fileUri);
+
+    if (!fileInfo.exists) {
+      Alert.alert('Local file not found', fileUri);
       return;
     }
 
     try {
-      setLoading(true);
-      const questRef = firestore()
-        .collection('users')
-        .doc(user.uid)
-        .collection('quests')
-        .doc(String(questId));
+      await storageRef.putFile(fileUri);
+      console.log('File uploaded to:', storageRef.fullPath);
+    } catch (uploadError) {
+      console.error('Upload failed:', uploadError);
+      Alert.alert('Upload failed', 'putFile failed before downloadURL.');
+      return;
+    }
 
-      const questSnap = await questRef.get();
+    const downloadURL = await storageRef.getDownloadURL();
 
-      if (!questSnap.exists) {
-        Alert.alert('Quest not found');
-        return;
-      }
+    await firestore()
+      .collection('users')
+      .doc(user.uid)
+      .collection('questUploads')
+      .add({
+        imageUrl: downloadURL,
+        questTitle,
+        timestamp: firestore.FieldValue.serverTimestamp(),
+      });
 
-      const quest = questSnap.data();
-      const newProgress = (quest?.progress ?? 0) + 1;
-      const isCompleted = newProgress >= (quest?.target ?? 1);
+    const newProgress = (quest?.progress ?? 0) + 1;
+    const isCompleted = newProgress >= (quest?.target ?? 1);
 
-      await questRef.update({
+    await firestore().runTransaction(async (transaction) => {
+      const userRef = firestore().collection('users').doc(user.uid);
+      const userSnap = await transaction.get(userRef);
+      const currentPoints = userSnap.data()?.ecoPoints ?? 0;
+
+      transaction.update(userRef, {
+        ecoPoints: currentPoints + (quest?.points ?? 0),
+      });
+
+      transaction.update(questRef, {
         progress: newProgress,
         completed: isCompleted,
       });
+    });
+    await firestore()
+      .collection('users')
+      .doc(user.uid)
+      .collection('carbonEmissionList')
+      .add({
+        carbonEmission: quest?.carbonEmission ?? 0,
+        questCompletionDate: firestore.FieldValue.serverTimestamp(),
+    });
 
-      Alert.alert('Photo uploaded, progress updated!');
-      router.push('/(auth)/(nav)/ecoQuest');
-    } catch (error) {
-      Alert.alert('❌ Upload failed');
-      console.error(error);
-    } finally {
-      setLoading(false);
+    Alert.alert('Photo uploaded and progress updated!');
+    router.push('/(auth)/(nav)/ecoQuest');
+  } catch (error) {
+    console.error('Upload error:', error);
+    if (error instanceof Error) {
+      Alert.alert('Upload failed', error.message);
+    } else {
+      Alert.alert('Upload failed', 'An unknown error occurred.');
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <View style={styles.container}>
@@ -69,16 +174,24 @@ export default function QuestSubmission() {
         </View>
       </View>
 
-      {/* Upload Section */}
       <View style={styles.uploadBox}>
         <View style={styles.dashedBorder}>
-          <TouchableOpacity style={styles.uploadIconContainer}>
-            <Image
-              source={require('../../assets/images/UploadCloud.png')}
-              style={styles.uploadIcon}
-            />
-            <Text style={styles.uploadText}>Tap to upload photo</Text>
-            <Text style={styles.uploadNote}>PNG, JPEG or PDF</Text>
+          <TouchableOpacity style={styles.uploadIconContainer} onPress={handlePickImage}>
+            {selectedImage ? (
+              <Image
+                source={{ uri: selectedImage.uri }}
+                style={{ width: 150, height: 150, borderRadius: 10, marginBottom: 10 }}
+              />
+            ) : (
+              <>
+                <Image
+                  source={require('../../assets/images/UploadCloud.png')}
+                  style={styles.uploadIcon}
+                />
+                <Text style={styles.uploadText}>Tap to upload photo</Text>
+                <Text style={styles.uploadNote}>PNG, JPEG or PDF</Text>
+              </>
+            )}
           </TouchableOpacity>
 
           <View style={styles.orRow}>
@@ -87,13 +200,12 @@ export default function QuestSubmission() {
             <View style={styles.orLine} />
           </View>
 
-          <TouchableOpacity style={styles.cameraButton}>
+          <TouchableOpacity style={styles.cameraButton} onPress={handleOpenCamera}>
             <Text style={styles.cameraButtonText}>Open camera</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Upload Button */}
       <TouchableOpacity
         style={styles.bottomButton}
         onPress={handleUpload}
@@ -108,7 +220,6 @@ export default function QuestSubmission() {
     </View>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {
@@ -125,7 +236,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: '10'
+    gap: '10',
   },
   backArrow: {
     fontSize: 22,
@@ -179,9 +290,9 @@ const styles = StyleSheet.create({
   },
   orLine: {
     flex: 1,
-    borderTopWidth: 1,             
+    borderTopWidth: 1,
     borderTopColor: '#d1d5db',
-    borderStyle: 'dashed',        
+    borderStyle: 'dashed',
     marginHorizontal: 10,
   },
   orText: {
@@ -215,4 +326,3 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
-
