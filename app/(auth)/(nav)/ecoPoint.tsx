@@ -4,12 +4,41 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
+type Quest = {
+  id: string;
+  type: 'daily' | 'weekly';
+  title: string;
+  points: number;
+  target: number;
+  progress: number;
+  completed: boolean;
+  carbonEmission: number;
+};
+
+function getHoursToNextSGTMidnight(): string {
+  const now = new Date();
+  const utcNow = now.getTime();
+  const nextMidnightSGT = new Date();
+  nextMidnightSGT.setUTCHours(16, 0, 0, 0);
+
+  if (utcNow >= nextMidnightSGT.getTime()) {
+    nextMidnightSGT.setUTCDate(nextMidnightSGT.getUTCDate() + 1);
+  }
+
+  const diffMs = nextMidnightSGT.getTime() - utcNow;
+  const hours = Math.floor(diffMs / 1000 / 60 / 60);
+  const minutes = Math.floor((diffMs / 1000 / 60) % 60);
+
+  return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+}
+
 export default function EcoPointsOverview() {
   const router = useRouter();
 
   const [dropletInput, setDropletInput] = useState<{ [key: string]: string }>({});
   const [ecoPoints, setEcoPoints] = useState<number>(0);
   const [treeStages, setTreeStages] = useState<{ [treeId: string]: string }>({});
+  const [highlightQuest, setHighlightQuest] = useState<Quest | null>(null);
 
   const DROPLET_COST = 15;
   const treeIds = ['Tomato', 'Strawberry', 'Bean'];
@@ -51,9 +80,47 @@ export default function EcoPointsOverview() {
     setTreeStages(treeStagesData);
   };
 
+  const fetchHighlightQuest = async () => {
+    const userId = auth().currentUser?.uid;
+    if (!userId) return;
+
+    const snapshot = await firestore()
+      .collection('users')
+      .doc(userId)
+      .collection('quests')
+      .get();
+
+    let topQuest: Quest | null = null;
+    let highestRatio = -1;
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const progress = data.progress ?? 0;
+      const target = data.target ?? 1;
+      const ratio = progress / target;
+
+      if (ratio > highestRatio) {
+        highestRatio = ratio;
+        topQuest = {
+          id: doc.id,
+          type: data.type,
+          title: data.title,
+          points: data.points,
+          target: data.target,
+          progress,
+          completed: data.completed ?? false,
+          carbonEmission: data.carbonEmission ?? 0,
+        };
+      }
+    });
+
+    setHighlightQuest(topQuest);
+  };
+
   useEffect(() => {
     fetchEcoPoints();
     fetchTrees();
+    fetchHighlightQuest();
   }, []);
 
   const waterTree = async (treeId: string, droplets: number) => {
@@ -122,18 +189,25 @@ export default function EcoPointsOverview() {
           <Text style={styles.questTitle}>
             You’re almost done with this quest.{"\n"}Finish it up for some quick points
           </Text>
-          <Text style={styles.timer}>19 Hours</Text>
-        </View>
-        <View style={styles.questContainer}>
-          <View style={styles.questHeaderRow}>
-            <Text style={styles.questProgressText}>Recycle 3 items</Text>
-            <Text style={styles.questPoints}>100 points</Text>
-          </View>
-          <View style={styles.progressBar}>
-            <View style={styles.progressFill} />
-            <Text style={styles.progressText}>1/3</Text>
+          <View style={styles.timerRow}>
+            <Image source={require('../../../assets/images/Clock.png')} style={styles.clockIcon} />
+            <Text style={styles.timerText}>
+              {highlightQuest ? getHoursToNextSGTMidnight() : ''}
+          </Text>
           </View>
         </View>
+        {highlightQuest && (
+          <View style={styles.questContainer}>
+            <View style={styles.questHeaderRow}>
+              <Text style={styles.questProgressText}>{highlightQuest.title}</Text>
+              <Text style={styles.questPoints}>{highlightQuest.points} points</Text>
+            </View>
+            <View style={styles.progressBar}>
+              <View style={[styles.progressFill, { width: `${(highlightQuest.progress / highlightQuest.target) * 100}%` }]} />
+              <Text style={styles.progressText}>{highlightQuest.progress}/{highlightQuest.target}</Text>
+            </View>
+          </View>
+        )}
         <TouchableOpacity onPress={() => router.push('/(auth)/(nav)/ecoQuest')}>
           <Text style={styles.ecoQuestLink}>➜ More Eco-Quest</Text>
         </TouchableOpacity>
@@ -317,4 +391,18 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   treeGalleryLink: { color: '#1bbc65', fontWeight: '600' },
+  timerRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  },
+  clockIcon: {
+    width: 14,
+    height: 14,
+    marginRight: 4,
+  },
+  timerText: {
+    color: '#f97316',
+    fontWeight: '600',
+    fontSize: 13,
+  },
 });

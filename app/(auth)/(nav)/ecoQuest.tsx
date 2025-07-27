@@ -157,12 +157,10 @@ export default function EcoQuest() {
       if (doc.id === currentMonth) {
         hasCurrentMonth = true;
       } else {
-        // Delete outdated month
         await userLoginBonusRef.doc(doc.id).delete();
       }
     }
 
-    // If user doesn't have the current month doc, create it
     if (!hasCurrentMonth) {
       await userLoginBonusRef.doc(currentMonth).set({
         progress: 0,
@@ -170,7 +168,6 @@ export default function EcoQuest() {
       });
     }
 
-    // Fetch updated doc
     const currentDoc = await userLoginBonusRef.doc(currentMonth).get();
     const data = currentDoc.data();
     const progress = data?.progress ?? 0;
