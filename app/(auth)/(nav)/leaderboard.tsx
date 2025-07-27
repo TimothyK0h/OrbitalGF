@@ -34,7 +34,11 @@ const Leaderboard = () => {
         profileImage?: string;
       }[];
 
-      const filtered = fetchedUsers.filter(user => activeTab !== 'Region' || user.region === currentRegion);
+      const filtered = fetchedUsers.filter(user => {
+        if (activeTab === 'Region') return user.region === currentRegion;
+        if (activeTab === 'Friend') return true; // Placeholder logic for now
+        return true;
+      });
       const sorted = filtered.sort((a, b) => b.ecoPoints - a.ecoPoints);
       const userIndex = sorted.findIndex(user => user.id === currentUser.uid);
       if (userIndex !== -1) setRank(userIndex + 1);
@@ -46,6 +50,19 @@ const Leaderboard = () => {
   }, [activeTab]);
 
   const podiumUsers = [1, 0, 2].map(i => users[i]).filter(Boolean);
+
+  const getTabLabel = () => {
+    switch (activeTab) {
+      case 'National':
+        return 'your nation';
+      case 'Friend':
+        return 'your friends list';
+      case 'Region':
+        return 'your region';
+      default:
+        return 'the leaderboard';
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -95,7 +112,7 @@ const Leaderboard = () => {
           </View>
         </View>
 
-        <Text style={styles.summary}>You've finished <Text style={{ color: '#1bbc65', fontWeight: 'bold' }}>#{rank}</Text> in the {activeTab.toLowerCase()} last month</Text>
+        <Text style={styles.summary}>You've finished <Text style={{ color: '#1bbc65', fontWeight: 'bold' }}>#{rank}</Text> in {getTabLabel()} </Text>
 
         <FlatList
           contentContainerStyle={styles.rankList}
