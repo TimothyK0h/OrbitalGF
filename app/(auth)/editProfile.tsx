@@ -1,19 +1,111 @@
 import { Ionicons } from '@expo/vector-icons';
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
+import storage from '@react-native-firebase/storage';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  Alert,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import DropDownPicker from 'react-native-dropdown-picker';
 
 export default function EditProfile() {
   const router = useRouter();
+  const user = auth().currentUser;
 
   const [name, setName] = useState('');
   const [place, setPlace] = useState('');
+  const [openRegion, setOpenRegion] = useState(false);
+  const [regionItems, setRegionItems] = useState([
+    { label: 'Central', value: 'Central' },
+    { label: 'North', value: 'North' },
+    { label: 'North-East', value: 'North-East' },
+    { label: 'East', value: 'East' },
+    { label: 'West', value: 'West' },
+  ]);
+
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [imageUri, setImageUri] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!user) return;
+      const doc = await firestore().collection('users').doc(user.uid).get();
+      const data = doc.data();
+      if (!data) return;
+
+      setName(data.name || '');
+      setPlace(data.region || '');
+      setPhone(data.phoneNumber || '');
+      setEmail(data.email || '');
+      if (data.profileImage) {
+        setImageUri(data.profileImage);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  const handleImagePick = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      setImageUri(result.assets[0].uri);
+    }
+  };
+
+  const uploadProfileImage = async (userId: string) => {
+    if (!imageUri || imageUri.startsWith('https://')) return imageUri; // already uploaded
+
+    const filePath = `profileImages/${userId}/profile.jpg`;
+    const reference = storage().ref(filePath);
+
+    await reference.putFile(imageUri);
+    const downloadUrl = await reference.getDownloadURL();
+
+    await firestore().collection('users').doc(userId).update({ profileImage: downloadUrl });
+    return downloadUrl;
+  };
+
+  const saveProfile = async () => {
+    if (!user) return;
+
+    const userRef = firestore().collection('users').doc(user.uid);
+
+    try {
+      const updates: any = {
+        name,
+        region: place,
+        phoneNumber: phone,
+        email,
+      };
+
+      const imageUrl = await uploadProfileImage(user.uid);
+      if (imageUrl) updates.profileImage = imageUrl;
+
+      await userRef.update(updates);
+      Alert.alert('Profile updated!');
+      router.push('/(auth)/(nav)/profile');
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Failed to update profile');
+    }
+  };
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.push('/(auth)/(nav)/profile')}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
@@ -23,34 +115,41 @@ export default function EditProfile() {
       </View>
 
       <ScrollView contentContainerStyle={styles.contentBox} style={styles.scrollArea}>
-        {/* Profile Image Upload */}
         <View style={styles.imageSection}>
-          <TouchableOpacity style={styles.avatarCircle}>
-            <Ionicons name="person-outline" size={32} color="#1bbc65" />
+          <TouchableOpacity style={styles.avatarCircle} onPress={handleImagePick}>
+            {imageUri ? (
+              <Image source={{ uri: imageUri }} style={{ width: 64, height: 64, borderRadius: 32 }} />
+            ) : (
+              <Ionicons name="person-outline" size={32} color="#1bbc65" />
+            )}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.uploadButton}>
+          <TouchableOpacity style={styles.uploadButton} onPress={handleImagePick}>
             <Text style={styles.uploadButtonText}>Upload Image</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Form Fields with placeholder text */}
         <View style={styles.inputGroup}>
           <TextInput
             style={styles.input}
-            placeholder="Name"
+            placeholder="Username"
             value={name}
             onChangeText={setName}
             placeholderTextColor="#9ca3af"
           />
         </View>
 
-        <View style={styles.inputGroup}>
-          <TextInput
-            style={styles.input}
-            placeholder="Place"
+        <View style={[styles.inputGroup, { zIndex: 1000 }]}>
+          <DropDownPicker
+            open={openRegion}
             value={place}
-            onChangeText={setPlace}
-            placeholderTextColor="#9ca3af"
+            items={regionItems}
+            setOpen={setOpenRegion}
+            setValue={setPlace}
+            setItems={setRegionItems}
+            placeholder="Select Region"
+            style={styles.input}
+            dropDownContainerStyle={{ borderColor: '#d1d5db' }}
+            listMode="MODAL"
           />
         </View>
 
@@ -76,7 +175,7 @@ export default function EditProfile() {
           />
         </View>
 
-        <TouchableOpacity style={styles.saveButton}>
+        <TouchableOpacity style={styles.saveButton} onPress={saveProfile}>
           <Text style={styles.saveButtonText}>UPDATE PROFILE DETAILS</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -108,7 +207,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
-    marginTop: 50, 
+    marginTop: 50,
     padding: 24,
   },
   imageSection: {
@@ -126,6 +225,7 @@ const styles = StyleSheet.create({
     borderColor: '#1bbc65',
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
   },
   uploadButton: {
     borderWidth: 1,
@@ -165,6 +265,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins',
   },
   scrollArea: {
-  flex: 1,
-},
+    flex: 1,
+  },
 });

@@ -1,10 +1,25 @@
 import { Entypo, FontAwesome5, Ionicons, MaterialIcons } from '@expo/vector-icons';
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function Profile() {
   const router = useRouter();
+  const [userData, setUserData] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const user = auth().currentUser;
+      if (!user) return;
+
+      const doc = await firestore().collection('users').doc(user.uid).get();
+      setUserData(doc.data());
+    };
+
+    fetchUserData();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -23,7 +38,7 @@ export default function Profile() {
           <Ionicons name="person" size={20} color="#a78bfa" />
           <View style={styles.infoText}>
             <Text style={styles.label}>Name</Text>
-            <Text style={styles.value}>Username</Text>
+            <Text style={styles.value}>{userData?.name || 'Unknown'}</Text>
           </View>
         </View>
 
@@ -31,7 +46,7 @@ export default function Profile() {
           <Ionicons name="location-sharp" size={20} color="#3b82f6" />
           <View style={styles.infoText}>
             <Text style={styles.label}>Place</Text>
-            <Text style={styles.value}>General location</Text>
+            <Text style={styles.value}>{userData?.region || 'Unknown'}</Text>
           </View>
         </View>
 
@@ -39,7 +54,7 @@ export default function Profile() {
           <MaterialIcons name="emoji-events" size={20} color="#facc15" />
           <View style={styles.infoText}>
             <Text style={styles.label}>Badges</Text>
-            <Text style={styles.value}>List of badges</Text>
+            <Text style={styles.value}>Coming soon</Text>
           </View>
         </View>
 
@@ -47,7 +62,7 @@ export default function Profile() {
           <FontAwesome5 name="seedling" size={20} color="#22c55e" />
           <View style={styles.infoText}>
             <Text style={styles.label}>Eco-points/Tree planted</Text>
-            <Text style={styles.value}>10000 / 10</Text>
+            <Text style={styles.value}>{userData?.ecoPoints || 0} / 0</Text>
           </View>
         </View>
 
@@ -55,7 +70,7 @@ export default function Profile() {
           <Ionicons name="call-outline" size={20} color="#a16207" />
           <View style={styles.infoText}>
             <Text style={styles.label}>Phone Number</Text>
-            <Text style={styles.value}>+91 99887 76655</Text>
+            <Text style={styles.value}>{userData?.phoneNumber || 'Unknown'}</Text>
           </View>
         </View>
 
@@ -63,7 +78,7 @@ export default function Profile() {
           <Entypo name="mail" size={20} color="#fb923c" />
           <View style={styles.infoText}>
             <Text style={styles.label}>Email Address</Text>
-            <Text style={styles.value}>arjundas@mail.com</Text>
+            <Text style={styles.value}>{userData?.email || 'Unknown'}</Text>
           </View>
         </View>
       </View>
