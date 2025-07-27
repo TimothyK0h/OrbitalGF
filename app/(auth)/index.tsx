@@ -1,4 +1,5 @@
 import auth, { FacebookAuthProvider, getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithCredential } from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -19,12 +20,14 @@ import {
 import { AccessToken, LoginManager } from 'react-native-fbsdk-next';
 
 export default function Index() {
-
-  // Set an initializing state whilst Firebase connects
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState<import('@react-native-firebase/auth').FirebaseAuthTypes.User | null>(null);
 
-  // Handle user state changes
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
   function handleAuthStateChanged(user: import('@react-native-firebase/auth').FirebaseAuthTypes.User | null) {
     setUser(user);
     if (initializing) setInitializing(false);
@@ -32,75 +35,139 @@ export default function Index() {
 
   useEffect(() => {
     const subscriber = onAuthStateChanged(getAuth(), handleAuthStateChanged);
-    return subscriber; // unsubscribe on unmount
+    return subscriber;
   }, []);
-  
-  useEffect(() =>{
-      GoogleSignin.configure({
-        webClientId: '546324666380-ikcoukp0rdcl78md8bir4ke99h1enjos.apps.googleusercontent.com',
+
+  useEffect(() => {
+    GoogleSignin.configure({
+      webClientId: '546324666380-ikcoukp0rdcl78md8bir4ke99h1enjos.apps.googleusercontent.com',
+    });
+  }, []);
+
+  const initializeNewUser = async (
+    uid: string,
+    userData: {
+      name: string;
+      region: string;
+      email: string;
+      phoneNumber: string;
+    }
+  ) => {
+    const defaultRef = firestore().collection('users').doc('defaultUser');
+    const newUserRef = firestore().collection('users').doc(uid);
+
+    const defaultDoc = await defaultRef.get();
+    if (!defaultDoc.exists) {
+      console.warn('defaultUser document not found.');
+      return;
+    }
+
+    const defaultData = defaultDoc.data();
+    if (!defaultData) return;
+
+    const mergedData = {
+      ...defaultData,
+      name: userData.name,
+      region: userData.region,
+      email: userData.email,
+      phoneNumber: userData.phoneNumber,
+    };
+
+    await newUserRef.set(mergedData);
+
+    const subcollections = [
+      'quests',
+      'questUploads',
+      'trees',
+      'loginBonus',
+      'carbonEmissionList',
+    ];
+
+    for (const sub of subcollections) {
+      try {
+        const defaultSubSnap = await defaultRef.collection(sub).get();
+        const batch = firestore().batch();
+
+        defaultSubSnap.forEach((doc) => {
+          const targetDoc = newUserRef.collection(sub).doc(doc.id);
+          batch.set(targetDoc, doc.data());
+        });
+
+        await batch.commit();
+      } catch (err) {
+        console.error(`Failed to copy subcollection ${sub}`, err);
+      }
+    }
+  };
+
+  async function onGoogleButtonPress() {
+    await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+    await GoogleSignin.signOut(); // optional: forces account chooser
+
+    const signInResult = await GoogleSignin.signIn();
+    const data = signInResult?.data;
+
+    if (!data || !data.idToken) {
+      throw new Error('Google sign-in failed: No ID token available.');
+    }
+
+    const googleCredential = GoogleAuthProvider.credential(data.idToken);
+    const userCredential = await signInWithCredential(getAuth(), googleCredential);
+
+    const uid = userCredential.user.uid;
+    const userDoc = await firestore().collection('users').doc(uid).get();
+    if (!userDoc.exists) {
+      await initializeNewUser(uid, {
+        name: userCredential.user.displayName ?? 'Unknown',
+        region: 'unknown',
+        email: userCredential.user.email ?? 'unknown',
+        phoneNumber: userCredential.user.phoneNumber ?? 'unknown',
+    });
+    }
+
+    Alert.alert('Signed in with Google!');
+    router.navigate('/(auth)/(nav)/home');
+  }
+
+
+  async function onFacebookButtonPress() {
+    const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
+
+    if (result.isCancelled) {
+      throw 'User cancelled the login process';
+    }
+
+    const data = await AccessToken.getCurrentAccessToken();
+
+    if (!data) {
+      throw 'Something went wrong obtaining access token';
+    }
+
+    const facebookCredential = FacebookAuthProvider.credential(data.accessToken);
+    const userCredential = await signInWithCredential(getAuth(), facebookCredential);
+
+    const uid = userCredential.user.uid;
+    const userDoc = await firestore().collection('users').doc(uid).get();
+    if (!userDoc.exists) {
+      await initializeNewUser(uid, {
+        name: userCredential.user.displayName ?? 'Unknown',
+        region: 'unknown',
+        email: userCredential.user.email ?? 'unknown',
+        phoneNumber: userCredential.user.phoneNumber ?? 'unknown',
       });
-    }, []);
-
-    async function onGoogleButtonPress() {
-      // Check if your device supports Google Play
-      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-
-      // 🔄 Sign out to force account chooser next time
-      await GoogleSignin.signOut();
-
-      // Get the users ID token
-      const signInResult = await GoogleSignin.signIn();
-
-      // Try the new style of google-sign in result, from v13+ of that module
-      const idToken = signInResult.data?.idToken;
-      if (!idToken) {
-        throw new Error('No ID token found');
-      }
-
-      // Create a Google credential with the token
-      if (!signInResult.data) {
-        throw new Error('Google sign-in result data is null');
-      }
-      const googleCredential = GoogleAuthProvider.credential(signInResult.data.idToken);
-      console.log(idToken, googleCredential);
-
-      // Sign-in the user with the credential
-      return signInWithCredential(getAuth(), googleCredential);
     }
 
-    async function onFacebookButtonPress() {
-      // Attempt login with permissions
-      const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
 
-      if (result.isCancelled) {
-        throw 'User cancelled the login process';
-      }
-
-      // Once signed in, get the users AccessToken
-      const data = await AccessToken.getCurrentAccessToken();
-
-      if (!data) {
-        throw 'Something went wrong obtaining access token';
-      }
-
-      // Create a Firebase credential with the AccessToken
-      const facebookCredential = FacebookAuthProvider.credential(data.accessToken);
-
-      // Sign-in the user with the credential
-      return signInWithCredential(getAuth(), facebookCredential);
-    }
-
-  const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+    Alert.alert('Signed in with Facebook!');
+    router.navigate('/(auth)/(nav)/home');
+  }
 
   const signIn = async () => {
     setLoading(true);
     try {
       await auth().signInWithEmailAndPassword(email, password);
       Alert.alert('Login Successful');
-      router.navigate('/(auth)/(nav)/home')
+      router.navigate('/(auth)/(nav)/home');
     } catch (e: any) {
       Alert.alert('Login Failed', e.message);
     } finally {
@@ -110,106 +177,101 @@ export default function Index() {
 
   return (
     <ImageBackground source={require('../../assets/images/intro-bg.jpg')} style={styles.bg} resizeMode={'cover'}>
-        <View style={{ flex: 1 }}>
+      <View style={{ flex: 1 }}>
         <View style={styles.header}>
-            <Text style={styles.logo}>GF</Text>
+          <Text style={styles.logo}>GF</Text>
         </View>
-      <KeyboardAvoidingView
-  style={{ flex: 1 }}
-  behavior={Platform.OS === 'ios' ? 'padding' : undefined}
->
-  <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-    <View style={styles.container}>
-          <Text style={styles.title}>Login</Text>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+            <View style={styles.container}>
+              <Text style={styles.title}>Login</Text>
 
-          <Text style={styles.label}>User Name</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Email / Phone Number"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            placeholderTextColor="#aaa"
-          />
+              <Text style={styles.label}>User Name</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Email / Phone Number"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                placeholderTextColor="#aaa"
+              />
 
-          <View style={styles.passwordRow}>
-            <Text style={styles.label}>Password</Text>
-            <TouchableOpacity>
-              <Text style={styles.forgot}>Forgot Password?</Text>
-            </TouchableOpacity>
-          </View>
+              <View style={styles.passwordRow}>
+                <Text style={styles.label}>Password</Text>
+                <TouchableOpacity>
+                  <Text style={styles.forgot}>Forgot Password?</Text>
+                </TouchableOpacity>
+              </View>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Enter Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            placeholderTextColor="#aaa"
-          />
+              <TextInput
+                style={styles.input}
+                placeholder="Enter Password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                placeholderTextColor="#aaa"
+              />
 
-          {loading ? (
-            <ActivityIndicator size="small" style={{ marginVertical: 20 }} />
-          ) : (
-            <>
-              <TouchableOpacity style={styles.loginButton} onPress={signIn}>
-                <Text style={styles.loginButtonText}>LOGIN NOW</Text>
+              {loading ? (
+                <ActivityIndicator size="small" style={{ marginVertical: 20 }} />
+              ) : (
+                <>
+                  <TouchableOpacity style={styles.loginButton} onPress={signIn}>
+                    <Text style={styles.loginButtonText}>LOGIN NOW</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+
+              <View style={styles.orLine}>
+                <View className="line" />
+                <Text style={styles.or}>Or login using</Text>
+                <View className="line" />
+              </View>
+
+              <View style={styles.socialRow}>
+                <TouchableOpacity
+                  style={styles.socialBtn}
+                  onPress={async () => {
+                    try {
+                      await onFacebookButtonPress();
+                    } catch (e: any) {
+                      Alert.alert('Facebook Sign-In failed:', e.message);
+                    }
+                  }}
+                >
+                  <Image source={require('../../assets/images/facebook-logo.png')} style={styles.socialIcon} />
+                  <Text style={styles.socialTextFacebook}>Facebook</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.socialBtn}
+                  onPress={async () => {
+                    try {
+                      await onGoogleButtonPress();
+                    } catch (e: any) {
+                      Alert.alert('Google Sign-In failed:', e.message);
+                    }
+                  }}
+                >
+                  <Image source={require('../../assets/images/gmail-logo.png')} style={styles.socialIcon} />
+                  <Text style={styles.socialTextGmail}>Gmail</Text>
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.bottomText}>
+                Don’t have an account yet?
+              </Text>
+
+              <TouchableOpacity onPress={() => router.push('/signup')}>
+                <Text style={styles.link}>Create New Account</Text>
               </TouchableOpacity>
-            </>
-          )}
-
-          <View style={styles.orLine}>
-            <View style={styles.line} />
-            <Text style={styles.or}>Or login using</Text>
-            <View style={styles.line} />
-          </View>
-
-          <View style={styles.socialRow}>
-            <TouchableOpacity
-              style={styles.socialBtn}
-              onPress={async () => {
-                try {
-                  await onFacebookButtonPress();
-                  Alert.alert('Signed in with Facebook!');
-                  router.navigate('/(auth)/(nav)/home');    
-                } catch (e: any) {
-                  Alert.alert('Facebook Sign-In failed:', e.message);
-                }
-              }}>
-              <Image source={require('../../assets/images/facebook-logo.png')} style={styles.socialIcon} />
-              <Text style={styles.socialTextFacebook}>Facebook</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.socialBtn}
-              onPress={async () => {
-                try {
-                  await onGoogleButtonPress();
-                  Alert.alert('Signed in with Google!');
-                  router.navigate('/(auth)/(nav)/home');
-                } catch (e: any) {
-                  Alert.alert('Google Sign-In failed:', e.message);
-                }
-              }}
-            >
-              <Image source={require('../../assets/images/gmail-logo.png')} style={styles.socialIcon} />
-              <Text style={styles.socialTextGmail}>Gmail</Text>
-            </TouchableOpacity>
-          </View>
-
-            <Text style={styles.bottomText}>
-              Don’t have an account yet?
-            </Text>
-
-          <TouchableOpacity onPress={() => router.push('/signup')}>
-            <Text style={styles.link}>Create New Account</Text>
-          </TouchableOpacity>
-          
-
-        </View>
-  </ScrollView>
-</KeyboardAvoidingView>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </View>
     </ImageBackground>
   );

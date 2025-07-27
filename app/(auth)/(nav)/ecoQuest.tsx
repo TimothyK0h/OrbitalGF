@@ -88,8 +88,11 @@ export default function EcoQuest() {
       const weeklyList: Quest[] = [];
 
       snapshot.forEach(doc => {
+        console.log(' Quest doc ID:', doc.id);
+        console.log(' Quest data:', doc.data());
+
         const data = doc.data();
-        if (!data.title || !data.type || !data.points || !data.target) return;
+        if (!data.title || !data.type || data.points === undefined || data.target === undefined) return;
 
         const quest: Quest = {
           id: doc.id,
@@ -110,10 +113,12 @@ export default function EcoQuest() {
       setWeeklyQuests(weeklyList);
     } catch (error) {
       Alert.alert('Error loading quests.');
+      console.error('FetchQuests error:', error);
     } finally {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     fetchQuests();

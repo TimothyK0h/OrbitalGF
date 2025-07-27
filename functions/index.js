@@ -1,28 +1,27 @@
-const { onRequest } = require("firebase-functions/v2/https");
-const { onSchedule } = require("firebase-functions/v2/scheduler");
-const logger = require("firebase-functions/logger");
+import admin from "firebase-admin";
+import logger from "firebase-functions/logger";
+import { onRequest } from "firebase-functions/v2/https";
+import { onSchedule } from "firebase-functions/v2/scheduler";
 
-const admin = require("firebase-admin");
 admin.initializeApp();
 const db = admin.firestore();
 
-exports.resetCompletedDailyQuests = onSchedule(
-  { schedule: "0 16 * * *", timeZone: "Asia/Singapore" }, 
+export const resetCompletedDailyQuests = onSchedule(
+  { schedule: "0 16 * * *", timeZone: "Asia/Singapore" },
   async () => {
     await resetCompletedQuestsByType("daily");
   }
 );
 
-
-exports.resetCompletedWeeklyQuests = onSchedule(
-  { schedule: "0 16 * * 1", timeZone: "Asia/Singapore" }, 
+export const resetCompletedWeeklyQuests = onSchedule(
+  { schedule: "0 16 * * 1", timeZone: "Asia/Singapore" },
   async () => {
     await resetCompletedQuestsByType("weekly");
   }
 );
 
 // THIS IS FOR TESTING
-exports.testResetQuests = onRequest(async (req, res) => {
+export const testResetQuests = onRequest(async (req, res) => {
   const type = req.query.type || "daily";
   await resetCompletedQuestsByType(type);
   res.send(`Tested reset for ${type} quests.`);
@@ -36,7 +35,7 @@ async function resetCompletedQuestsByType(questType) {
       .where("type", "==", questType)
       .get();
 
-    let defaultQuests = defaultQuestsSnap.docs.map((doc) => ({
+    const defaultQuests = defaultQuestsSnap.docs.map((doc) => ({
       id: doc.id,
       data: doc.data(),
     }));
@@ -55,7 +54,7 @@ async function resetCompletedQuestsByType(questType) {
       const shuffledQuests = shuffle([...defaultQuests]);
 
       const updates = completedSnap.docs.map((completedDoc, index) => {
-        const newQuest = shuffledQuests[index % shuffledQuests.length]; 
+        const newQuest = shuffledQuests[index % shuffledQuests.length];
         return userQuestRef.doc(completedDoc.id).set({
           ...newQuest.data,
           completed: false,
@@ -67,11 +66,9 @@ async function resetCompletedQuestsByType(questType) {
     });
 
     await Promise.all(userUpdates);
-    logger.info(`✅ ${questType} quests reset for all users.`);
-    return null;
+    logger.info(`${questType} quests reset for all users.`);
   } catch (err) {
-    logger.error(`❌ Failed to reset ${questType} quests:`, err);
+    logger.error(`Failed to reset ${questType} quests:`, err);
     throw err;
   }
 }
-
