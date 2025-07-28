@@ -9,7 +9,7 @@ export default function NavLayout() {
 
   return (
     <>
-      <Stack screenOptions={{ headerShown: true }} />
+      <Stack screenOptions={{ headerShown: false }} />
 
       <View style={styles.navbar}>
         <TouchableOpacity
