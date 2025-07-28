@@ -1,12 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
+import firestore from '@react-native-firebase/firestore';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
+  Alert,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 
 export default function FeedbackScreen() {
@@ -29,6 +31,30 @@ export default function FeedbackScreen() {
       );
     }
     return stars;
+  };
+
+  const submitFeedback = async () => {
+    try {
+      if (rating === 0 && feedback.trim() === '') {
+        Alert.alert('Feedback Required', 'Please provide a rating or suggestion.');
+        return;
+      }
+
+      await firestore()
+        .collection('feedback')
+        .add({
+          rating,
+          suggestion: feedback.trim(),
+          createdAt: firestore.FieldValue.serverTimestamp(),
+        });
+
+      Alert.alert('Thank you!', 'Your feedback has been submitted.');
+      setRating(0);
+      setFeedback('');
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      Alert.alert('Error', 'Failed to submit feedback. Please try again.');
+    }
   };
 
   return (
@@ -58,7 +84,7 @@ export default function FeedbackScreen() {
           value={feedback}
           onChangeText={setFeedback}
         />
-        <TouchableOpacity style={styles.submitButton}>
+        <TouchableOpacity style={styles.submitButton} onPress={submitFeedback}>
           <Text style={styles.submitButtonText}>Submit</Text>
         </TouchableOpacity>
       </View>
