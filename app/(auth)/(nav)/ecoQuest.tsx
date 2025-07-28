@@ -296,10 +296,6 @@ export default function EcoQuest() {
 
       <QuestSection title="Weekly Quests" quests={weeklyQuests} timeLeft={getDaysToNextMondaySGT()} />
       <QuestSection title="Daily Quests" quests={dailyQuests} timeLeft={getHoursToNextSGTMidnight()} />
-
-      <TouchableOpacity onPress={handleReset} style={{ alignSelf: 'center', marginTop: 20 }}>
-        <Text style={{ color: '#1bbc65', fontWeight: '600' }}>↻ Reset</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 }
