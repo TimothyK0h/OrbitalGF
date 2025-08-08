@@ -3,13 +3,7 @@ import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import {
-  Image,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const treeImages: { [key: string]: any } = {
   Tomato1: require('../../../assets/images/tomato1.png'),
@@ -99,7 +93,7 @@ export default function TreePlanting() {
       setGrowthStage(newStage);
       setGrowthProgress(newDroplets);
     } catch (err) {
-      console.error('🔥 Watering Error:', err);
+      console.error('Watering Error:', err);
       alert('An error occurred while watering the tree.');
     }
   };
@@ -144,7 +138,6 @@ export default function TreePlanting() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.logo}>GF</Text>
         <View style={styles.headerRight}>
@@ -161,12 +154,10 @@ export default function TreePlanting() {
         </View>
       </View>
 
-      {/* Tree Display */}
       <View style={styles.treeCard}>
         <Image source={getTreeImage()} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
       </View>
 
-      {/* Tree Base Bar */}
       <View style={styles.treeBaseBar}>
         <Text style={styles.treeStage}>{growthStage}</Text>
         <View style={styles.treeNav}>
@@ -183,7 +174,6 @@ export default function TreePlanting() {
         </TouchableOpacity>
       </View>
 
-      {/* Status Bar with Growth + Water */}
       <View style={styles.statusBar}>
         <View style={styles.progressSection}>
           <Text style={styles.statusLabel}>Growth progress</Text>

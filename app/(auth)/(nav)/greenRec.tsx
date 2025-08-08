@@ -5,7 +5,6 @@ export default function EcoTips() {
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        {/* Green Full-Width Header Section */}
         <View style={styles.fullWidthGreen}>
           <Text style={styles.title}>Eco-tips</Text>
           <Text style={styles.subtitle}>Recommendation of the day</Text>
@@ -17,7 +16,6 @@ export default function EcoTips() {
           </View>
         </View>
 
-        {/* Daily Habits Section */}
         <Text style={styles.sectionTitle}>Daily habits</Text>
         <View style={styles.groupedCard}>
           <Text style={styles.cardText}>
@@ -33,10 +31,8 @@ export default function EcoTips() {
           </Text>
         </View>
 
-        {/* Divider between sections */}
         <View style={styles.sectionLineDivider} />
 
-        {/* Beyond the App Section */}
         <Text style={styles.sectionTitle}>Beyond the app</Text>
         <View style={styles.groupedCard}>
           <Text style={styles.cardText}>
@@ -58,8 +54,6 @@ export default function EcoTips() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   scroll: { paddingBottom: 100 },
-
-  // Full-width green header section
   fullWidthGreen: {
     backgroundColor: '#1bbc65',
     paddingVertical: 16,

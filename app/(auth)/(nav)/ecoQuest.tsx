@@ -2,16 +2,7 @@ import auth from '@react-native-firebase/auth';
 import firestore, { Timestamp } from '@react-native-firebase/firestore';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, } from 'react-native';
 
 type Quest = {
   id: string;
@@ -150,7 +141,6 @@ export default function EcoQuest() {
 
     const allBonusDocs = await userLoginBonusRef.get();
 
-  // Check if user already has a loginBonus doc for the current month
     let hasCurrentMonth = false;
 
     for (const doc of allBonusDocs.docs) {

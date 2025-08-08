@@ -1,4 +1,3 @@
-// app/(auth)/settings.tsx
 import auth from '@react-native-firebase/auth';
 import { useRouter } from 'expo-router';
 import React from 'react';

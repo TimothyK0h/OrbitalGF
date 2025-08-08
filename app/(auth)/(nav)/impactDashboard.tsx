@@ -1,13 +1,7 @@
 import { Entypo, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
-} from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function ImpactDashboard() {
   const router = useRouter();
@@ -99,7 +93,7 @@ export default function ImpactDashboard() {
         </View>
 
         {
-          //impact cards placeholder
+          //PLACEHOLDER FOR IMPACT CARDS
         }
 
         <View style={styles.cardRow}>

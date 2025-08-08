@@ -1,14 +1,13 @@
-import React, { useEffect } from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import React, { useEffect } from 'react';
+import { Image, StyleSheet, Text, View } from 'react-native';
 
 export default function LoadingScreen() {
   const router = useRouter();
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      // navigate to login page after 2 seconds
-      router.replace('/intro'); // change if your main screen is not at index
+      router.replace('/intro'); 
     }, 5000);
 
     return () => clearTimeout(timer);

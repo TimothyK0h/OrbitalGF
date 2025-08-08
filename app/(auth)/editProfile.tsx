@@ -5,16 +5,7 @@ import storage from '@react-native-firebase/storage';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import {
-  Alert,
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 
 export default function EditProfile() {
@@ -67,7 +58,7 @@ export default function EditProfile() {
   };
 
   const uploadProfileImage = async (userId: string) => {
-    if (!imageUri || imageUri.startsWith('https://')) return imageUri; // already uploaded
+    if (!imageUri || imageUri.startsWith('https://')) return imageUri; 
 
     const filePath = `profileImages/${userId}/profile.jpg`;
     const reference = storage().ref(filePath);

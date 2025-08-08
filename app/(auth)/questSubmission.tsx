@@ -6,15 +6,7 @@ import type { ImagePickerAsset } from 'expo-image-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Alert, Image, StyleSheet, Text, TouchableOpacity, View, } from 'react-native';
 
 export default function QuestSubmission() {
   const router = useRouter();
@@ -84,7 +76,6 @@ export default function QuestSubmission() {
     const filename = `${Date.now()}.jpg`;
     const storageRef = storage().ref(`questUploads/${user.uid}/${filename}`);
 
-    // Ensure local file URI
     let fileUri = selectedImage.uri;
     if (!fileUri.startsWith('file://')) {
       const downloaded = await FileSystem.downloadAsync(

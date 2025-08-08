@@ -1,13 +1,6 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  StyleSheet,
-  ImageBackground,
-} from 'react-native';
 import { useRouter } from 'expo-router';
+import React from 'react';
+import { Image, ImageBackground, StyleSheet, Text, TouchableOpacity, View, } from 'react-native';
 
 export default function IntroPage2() {
   const router = useRouter();

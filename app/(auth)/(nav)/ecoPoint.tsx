@@ -161,7 +161,7 @@ export default function EcoPointsOverview() {
 
       router.push(`/(auth)/(nav)/treePlanting?tree=${treeId}`);
     } catch (err) {
-      console.error('🔥 Watering Error:', err);
+      console.error('Watering Error:', err);
       alert('An error occurred while watering the tree.');
     }
   };

@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-const Leaderboard = () => {
+export default function Leaderboard() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'Friend' | 'Region' | 'National'>('Region');
   const [users, setUsers] = useState<any[]>([]);
@@ -169,4 +169,3 @@ const styles = StyleSheet.create({
   rankPoints: { fontWeight: '500', color: '#555' },
 });
 
-export default Leaderboard;

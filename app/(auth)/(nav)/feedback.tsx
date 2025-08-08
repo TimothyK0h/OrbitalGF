@@ -2,14 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import firestore from '@react-native-firebase/firestore';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import {
-  Alert,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
-} from 'react-native';
+import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function FeedbackScreen() {
   const router = useRouter();
@@ -66,7 +59,6 @@ export default function FeedbackScreen() {
         <Text style={styles.headerTitle}>Feedback and Suggestions</Text>
       </View>
 
-      {/* Main content */}
       <View style={styles.content}>
         <Text style={styles.title}>We value your opinion.</Text>
 

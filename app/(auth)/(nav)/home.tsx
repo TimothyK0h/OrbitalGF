@@ -1,14 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import {
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, } from 'react-native';
 
 export default function Home() {
   const router = useRouter();
@@ -16,7 +9,6 @@ export default function Home() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.logo}>GF</Text>
         <View style={styles.headerRight}>
@@ -31,23 +23,19 @@ export default function Home() {
         </View>
       </View>
 
-      {/* Welcome */}
       <Text style={styles.welcome}>Welcome to your forest!</Text>
 
-      {/* Forest Image */}
       <Image
         source={require('../../../assets/images/forest.png')}
         style={styles.forestImage}
         resizeMode="contain"
       />
 
-      {/* Content */}
       <ScrollView
         style={styles.content}
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
-        {/* Tree Gallery */}
         <Text style={styles.sectionTitle}>Tree gallery</Text>
         <View style={styles.treeRow}>
           {treeList.map((tree, index) => (
@@ -64,7 +52,6 @@ export default function Home() {
 
         <View style={styles.divider} />
 
-        {/* Other Features */}
         <Text style={styles.sectionTitle}>Other features</Text>
         <View style={styles.featureRow}>
           <TouchableOpacity
